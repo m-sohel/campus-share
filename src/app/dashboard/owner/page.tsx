@@ -5,15 +5,26 @@ import { Badge } from "@/components/ui/badge";
 import {
   Layers,
   CheckCircle2,
+  Inbox,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { getOwnerInbox } from "@/backend/services/bookings";
+import { OwnerInboxList } from "@/components/bookings/OwnerInboxList";
 
 export default async function OwnerDashboard() {
   const user = await requireRole(["owner", "admin"]);
 
   const seedUser = SEED_USERS.find((u) => u.email === user.email || u.id === user.id);
   const targetId = seedUser?.id || user.id;
+
+  // Fetch live requests inbox
+  let inboxItems: any[] = [];
+  try {
+    inboxItems = await getOwnerInbox(targetId, user.role);
+  } catch (e) {
+    console.error("Failed to fetch owner inbox:", e);
+  }
 
   // Filter resources owned by this specific owner (or all if admin)
   const ownedResources =
@@ -65,6 +76,26 @@ export default async function OwnerDashboard() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Owner Request Inbox */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <Inbox className="w-5 h-5 text-indigo-600" />
+              Reservation Request Inbox
+            </h2>
+            <p className="text-sm text-slate-600">
+              Review requester eligibility, detect schedule conflicts, and record approval/waitlist decisions.
+            </p>
+          </div>
+          <Badge variant="outline" className="font-semibold text-xs border-indigo-200 text-indigo-700 bg-indigo-50">
+            {inboxItems.length} Active Requests
+          </Badge>
+        </div>
+
+        <OwnerInboxList initialInbox={inboxItems} actorId={targetId} />
       </div>
 
       {/* Owned Resources Grid */}

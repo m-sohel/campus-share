@@ -8,9 +8,15 @@ import {
   CheckCircle2,
   XCircle,
   FileBadge,
+  Calendar,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { BookResourceButton } from "@/components/bookings/BookResourceButton";
+import { UserBookingsList, UserBookingItem } from "@/components/bookings/UserBookingsList";
+import { getSupabaseAdminClient } from "@/backend/client";
+import { explainBookingDecision } from "@/lib/rules/decision-explanation";
+import { Booking, Resource } from "@/types";
 
 export default async function UserDashboard() {
   const user = await requireRole(["user", "admin"]);
@@ -20,6 +26,37 @@ export default async function UserDashboard() {
 
   // Fetch credentials for this user
   const userCredentials = SEED_CREDENTIALS.filter((c) => c.user_id === targetId || c.user_id === user.id);
+
+  // Fetch active bookings for this user
+  let userBookingItems: UserBookingItem[] = [];
+  try {
+    const supabase = getSupabaseAdminClient();
+    const { data: bookings } = await supabase
+      .from("bookings")
+      .select("*")
+      .eq("user_id", targetId)
+      .order("created_at", { ascending: false });
+
+    if (bookings && bookings.length > 0) {
+      const { data: allResources } = await supabase.from("resources").select("*");
+      const resMap = new Map((allResources || []).map((r) => [r.id, r]));
+
+      userBookingItems = (bookings as Booking[]).map((b) => {
+        const res = resMap.get(b.resource_id) as Resource | undefined;
+        const exp = explainBookingDecision({
+          booking: b,
+          resource: res,
+        });
+        return {
+          booking: b,
+          resource: res,
+          explanation: exp,
+        };
+      });
+    }
+  } catch (e) {
+    console.error("Failed to load user bookings:", e);
+  }
 
   // Run eligibility checks on all 8 resources
   const eligibilitySummaries = SEED_RESOURCES.map((res) => {
@@ -155,6 +192,26 @@ export default async function UserDashboard() {
         )}
       </div>
 
+      {/* Your Bookings Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-indigo-600" />
+              Your Reservations & Request History
+            </h2>
+            <p className="text-sm text-slate-600">
+              Track status in real time and inspect the "Why" panel for full decision transparency.
+            </p>
+          </div>
+          <Badge variant="outline" className="font-semibold text-xs border-indigo-200 text-indigo-700 bg-indigo-50">
+            {userBookingItems.length} Reservations
+          </Badge>
+        </div>
+
+        <UserBookingsList bookings={userBookingItems} userId={targetId} />
+      </div>
+
       {/* Real-Time Prerequisite Eligibility Matrix */}
       <div className="space-y-4">
         <div>
@@ -222,6 +279,20 @@ export default async function UserDashboard() {
                     ))}
                   </div>
                 )}
+
+                <div className="pt-3 border-t border-slate-200/70 flex items-center justify-between">
+                  <span className="text-[11px] text-slate-500">
+                    Max {resource.max_duration_hours}h • {resource.requires_supervision ? "Supervised" : "Self-serve"}
+                  </span>
+                  <BookResourceButton
+                    resource={{
+                      ...resource,
+                      created_at: new Date().toISOString(),
+                      updated_at: new Date().toISOString(),
+                    }}
+                    isEligible={eligibility.isEligible}
+                  />
+                </div>
               </CardContent>
             </Card>
           ))}

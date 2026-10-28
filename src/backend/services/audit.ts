@@ -3,10 +3,12 @@ import { computeAuditHash } from "@/lib/rules/audit-verifier";
 
 export interface LogAuditParams {
   actorId: string;
+  actorRole?: string;
   action: string;
   resourceType: string;
   resourceId: string;
   newState?: Record<string, unknown> | null;
+  previousState?: Record<string, unknown> | null;
   reason: string;
 }
 
@@ -28,6 +30,7 @@ export async function logAuditEvent(params: LogAuditParams) {
   const prevHash = latestEntry?.hash || "GENESIS_ROOT_HASH";
   const id = crypto.randomUUID();
   const createdAt = new Date().toISOString();
+  const actorRole = params.actorRole || "user";
 
   const hash = computeAuditHash(prevHash, {
     id,
@@ -45,11 +48,13 @@ export async function logAuditEvent(params: LogAuditParams) {
     .insert({
       id,
       actor_id: params.actorId,
+      actor_role: actorRole,
       action: params.action,
       resource_type: params.resourceType,
       resource_id: params.resourceId,
-      previous_hash: prevHash,
+      prev_hash: prevHash,
       hash,
+      previous_state: params.previousState || null,
       new_state: params.newState || {},
       reason: params.reason,
       created_at: createdAt,
@@ -64,4 +69,3 @@ export async function logAuditEvent(params: LogAuditParams) {
 
   return data;
 }
-
