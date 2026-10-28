@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { DecisionExplanation } from "@/lib/rules/decision-explanation";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -14,14 +14,25 @@ import {
   Clock,
   Sparkles,
   UserCheck,
+  History,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
+import { BookingTimeline } from "./BookingTimeline";
 
 interface DecisionWhyPanelProps {
   explanation: DecisionExplanation;
   className?: string;
+  viewerRole?: string;
 }
 
-export function DecisionWhyPanel({ explanation, className = "" }: DecisionWhyPanelProps) {
+export function DecisionWhyPanel({
+  explanation,
+  className = "",
+  viewerRole = "user",
+}: DecisionWhyPanelProps) {
+  const [showTimeline, setShowTimeline] = useState(false);
+
   const getBadgeIcon = () => {
     switch (explanation.badgeVariant) {
       case "success":
@@ -137,8 +148,28 @@ export function DecisionWhyPanel({ explanation, className = "" }: DecisionWhyPan
             </div>
           </div>
         </div>
+
+        {/* Stage 5: Chronological Booking Timeline */}
+        <div className="pt-3 border-t border-slate-800">
+          <button
+            type="button"
+            onClick={() => setShowTimeline(!showTimeline)}
+            className="w-full flex items-center justify-between p-2 rounded-lg bg-slate-950/60 hover:bg-slate-950 border border-slate-800 transition text-xs text-slate-300 font-semibold"
+          >
+            <span className="flex items-center gap-1.5 text-indigo-400">
+              <History className="w-4 h-4" />
+              Complete Chronological Journey Timeline
+            </span>
+            {showTimeline ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
+
+          {showTimeline && (
+            <div className="mt-3 p-3 rounded-xl bg-slate-950/70 border border-slate-800/80 animate-in fade-in">
+              <BookingTimeline bookingId={explanation.bookingId} viewerRole={viewerRole} />
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
 }
-

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { checkLoginRateLimit, resetLoginRateLimit } from "@/lib/auth/rate-limiter";
 import { DEMO_USERS } from "@/lib/data/demo-users";
 import { createClientServer } from "@/lib/supabase/server";
+import { logAuditEvent } from "@/backend/services/audit";
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,6 +17,7 @@ export async function POST(req: NextRequest) {
 
     // 1. Check Rate Limit
     const clientIp = req.headers.get("x-forwarded-for") || "local-client";
+    const userAgent = req.headers.get("user-agent") || "unknown";
     const rateLimitKey = `${clientIp}::${email.toLowerCase()}`;
     const rateLimit = checkLoginRateLimit(rateLimitKey);
 
@@ -36,6 +38,22 @@ export async function POST(req: NextRequest) {
 
     if (demoMatch && password === demoMatch.password) {
       resetLoginRateLimit(rateLimitKey);
+
+      // Log login event to tamper-evident audit trail
+      try {
+        await logAuditEvent({
+          actorId: demoMatch.id,
+          actorRole: demoMatch.role,
+          action: "USER_LOGGED_IN",
+          resourceType: "session",
+          resourceId: demoMatch.id,
+          ipAddress: clientIp,
+          userAgent,
+          reason: `User signed in successfully as ${demoMatch.role} persona.`,
+        });
+      } catch (e) {
+        console.warn("Audit logging warning on login:", e);
+      }
 
       const response = NextResponse.json({
         success: true,
@@ -73,11 +91,26 @@ export async function POST(req: NextRequest) {
 
         const { data: profile } = await supabase
           .from("profiles")
-          .select("role")
+          .select("role, full_name")
           .eq("id", data.user.id)
           .single();
 
         const role = profile?.role || "user";
+
+        try {
+          await logAuditEvent({
+            actorId: data.user.id,
+            actorRole: role,
+            action: "USER_LOGGED_IN",
+            resourceType: "session",
+            resourceId: data.user.id,
+            ipAddress: clientIp,
+            userAgent,
+            reason: `User authenticated via Supabase credentials as ${role}.`,
+          });
+        } catch (e) {
+          console.warn("Audit logging warning on Supabase login:", e);
+        }
 
         return NextResponse.json({
           success: true,
@@ -98,8 +131,7 @@ export async function POST(req: NextRequest) {
       { status: 401 }
     );
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Internal login error";
+    const message = err instanceof Error ? err.message : "Internal authentication error";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-

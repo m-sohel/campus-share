@@ -1,6 +1,5 @@
 import { requireRole } from "@/lib/auth/role-guard";
 import { SEED_USERS, SEED_RESOURCES, SEED_CREDENTIALS } from "@/lib/data/seed-data";
-import { verifyAuditChain, computeAuditHash } from "@/lib/rules/audit-verifier";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -9,36 +8,27 @@ import {
   Layers,
   FileCheck,
   CheckCircle2,
-  AlertOctagon,
-  Sparkles,
   Lock,
 } from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { getAuditLogEntries } from "@/backend/services/audit";
+import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
+import { getSupabaseAdminClient } from "@/backend/client";
 
 export default async function AdminDashboard() {
   const user = await requireRole(["admin"]);
 
-  // Build a test audit chain to run verification test live
-  const sampleGenesis = {
-    id: "30000000-0000-0000-0000-000000000001",
-    actor_id: user.id,
-    actor_role: "admin",
-    action: "SYSTEM_INITIALIZED",
-    resource_type: "system",
-    resource_id: "seed-v1",
-    previous_state: null,
-    new_state: { seeded_users: SEED_USERS.length, seeded_resources: SEED_RESOURCES.length },
-    reason: "Initial system seeding and cryptographic audit chain bootstrap.",
-    ip_address: "127.0.0.1",
-    user_agent: "CampusShare-Verification-Agent/1.0",
-    prev_hash: "GENESIS_HASH",
-    hash: "",
-    created_at: "2026-10-28T12:00:00Z",
-  };
-  sampleGenesis.hash = computeAuditHash("GENESIS_HASH", sampleGenesis);
+  // Fetch real live audit log entries from Supabase
+  let auditEntries: any[] = [];
+  let actors: { id: string; name: string; role: string }[] = [];
 
-  const chainResult = verifyAuditChain([sampleGenesis]);
+  try {
+    auditEntries = await getAuditLogEntries({ limit: 100 });
+    const supabase = getSupabaseAdminClient();
+    const { data: profiles } = await supabase.from("profiles").select("id, full_name, role");
+    actors = (profiles || []).map((p: any) => ({ id: p.id, name: p.full_name, role: p.role }));
+  } catch (e) {
+    console.error("Failed to fetch audit log for admin:", e);
+  }
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 space-y-8">
@@ -63,7 +53,7 @@ export default async function AdminDashboard() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Badge variant="success" className="px-3 py-1 font-semibold text-xs">
+            <Badge variant="secondary" className="px-3 py-1 font-semibold text-xs bg-emerald-950 text-emerald-300 border-emerald-500/30">
               Platform Status: Healthy
             </Badge>
           </div>
@@ -115,36 +105,18 @@ export default async function AdminDashboard() {
           <CardHeader className="pb-2">
             <CardDescription className="text-xs font-semibold uppercase">Audit Chain Security</CardDescription>
             <CardTitle className="text-2xl font-bold flex items-center justify-between text-emerald-600">
-              <span>100% Tamper-Proof</span>
+              <span>100% Chained</span>
               <Lock className="w-5 h-5 text-emerald-600" />
             </CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-emerald-700">
-            SHA-256 Chained Hash Valid
+            SHA-256 Hash Chain Active ({auditEntries.length} Blocks)
           </CardContent>
         </Card>
       </div>
 
-      {/* Audit Log Health Check Box */}
-      <Card className="border-emerald-200 bg-emerald-50/40">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2 text-emerald-950">
-            <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-            Cryptographic Audit Log Verification Result
-          </CardTitle>
-          <CardDescription className="text-xs text-emerald-800">
-            Verified by pure TypeScript verification module at <code className="font-mono bg-white px-1.5 py-0.5 rounded border border-emerald-300">/lib/rules/audit-verifier.ts</code>
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2 text-xs text-slate-700">
-          <div className="bg-white p-3 rounded-lg border border-emerald-200 font-mono text-[11px] space-y-1">
-            <div className="text-slate-500">{"// Chain verification check:"}</div>
-            <div>Status: <span className="text-emerald-700 font-bold">{chainResult.isValid ? "VERIFIED (OK)" : "TAMPERED"}</span></div>
-            <div>Message: {chainResult.message}</div>
-            <div>Genesis Hash: <span className="text-slate-600 break-all">{sampleGenesis.hash}</span></div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Stage 5: Live Cryptographic Audit Trail Viewer */}
+      <AuditLogViewer initialEntries={auditEntries} actors={actors} />
 
       {/* Seeded User Roster Table */}
       <Card className="border-slate-200 shadow-sm">
@@ -211,4 +183,3 @@ export default async function AdminDashboard() {
     </div>
   );
 }
-
