@@ -1,5 +1,6 @@
 import { requireRole } from "@/lib/auth/role-guard";
 import { SEED_CREDENTIALS, SEED_RESOURCES } from "@/lib/data/seed-data";
+import { getAllBookings } from "@/lib/data/store";
 import { checkEligibility } from "@/lib/rules/eligibility";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +14,8 @@ import {
   XCircle,
   FileBadge,
   Sparkles,
+  QrCode,
+  ArrowRight,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -53,6 +56,10 @@ export default async function UserDashboard() {
     };
   });
 
+  // Fetch user reservations
+  const allBookings = await getAllBookings();
+  const userBookings = allBookings.filter((b) => b.user_id === user.id);
+
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 space-y-8">
       {/* Header Profile Banner */}
@@ -88,6 +95,63 @@ export default async function UserDashboard() {
           </div>
         </div>
       </div>
+
+      {/* User Reservations & Digital Handover Passes */}
+      {userBookings.length > 0 && (
+        <div className="rounded-2xl border border-indigo-200 bg-white p-5 shadow-sm space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div>
+              <h2 className="font-bold text-base text-slate-900 flex items-center gap-2">
+                <QrCode className="w-5 h-5 text-indigo-600" />
+                My Active Reservations & Digital Passes
+              </h2>
+              <p className="text-xs text-slate-500">
+                Present your QR code pass to station technicians for physical check-in and handover.
+              </p>
+            </div>
+            <Link href="/bookings">
+              <Button variant="outline" size="sm" className="text-xs">
+                All Bookings
+              </Button>
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {userBookings.map((b) => {
+              const res = SEED_RESOURCES.find((r) => r.id === b.resource_id);
+              return (
+                <div
+                  key={b.id}
+                  className="p-4 rounded-xl border border-slate-200 bg-slate-50/60 flex items-center justify-between gap-3"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant={b.status === "approved" ? "success" : "default"}
+                        className={`text-[9px] uppercase font-bold ${
+                          b.status === "in_use" ? "bg-indigo-600" : ""
+                        }`}
+                      >
+                        {b.status.replace("_", " ")}
+                      </Badge>
+                      <span className="text-[10px] font-mono text-slate-400">#{b.id}</span>
+                    </div>
+                    <p className="font-bold text-sm text-slate-900">{res?.name}</p>
+                    <p className="text-xs text-slate-500">{res?.location}</p>
+                  </div>
+
+                  <Link href={`/bookings/${b.id}`}>
+                    <Button size="sm" className="h-8 text-xs bg-indigo-600 hover:bg-indigo-700 text-white gap-1 shrink-0">
+                      <QrCode className="w-3.5 h-3.5" />
+                      View Pass & Diff
+                    </Button>
+                  </Link>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Grid: Credentials & Qualifications */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

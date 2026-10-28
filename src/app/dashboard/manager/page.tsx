@@ -1,15 +1,16 @@
 import { requireRole } from "@/lib/auth/role-guard";
-import { SEED_RESOURCES, SEED_USERS } from "@/lib/data/seed-data";
+import { SEED_RESOURCES } from "@/lib/data/seed-data";
+import { getAllBookings } from "@/lib/data/store";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Wrench,
-  ShieldCheck,
   CheckCircle2,
-  AlertTriangle,
   ClipboardCheck,
   Building2,
   Clock,
+  ArrowRight,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,9 @@ export default async function ManagerDashboard() {
     user.role === "admin"
       ? SEED_RESOURCES
       : SEED_RESOURCES.filter((r) => r.manager_id === user.id);
+
+  const bookings = await getAllBookings();
+  const activeBookings = bookings.filter((b) => b.status === "approved" || b.status === "in_use");
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 space-y-8">
@@ -63,11 +67,97 @@ export default async function ManagerDashboard() {
         <ClipboardCheck className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
         <div className="space-y-1">
           <strong className="block text-amber-950">
-            Physical Inspection & Handover Protocol
+            Physical Inspection & Handover Protocol (Steps 7 & 8)
           </strong>
           <p className="text-amber-800 leading-relaxed">
-            As designated technician, you execute Step 7 (initial condition sign-off at check-in) and Step 8 (return inspection). Always verify optical lenses, bed alignment, and safety interlocks prior to completing handover.
+            As designated technician, you execute Step 7 (initial condition sign-off at check-in) and Step 8 (return inspection). Any variance detected during return automatically creates a Draft incident for review with zero automated penalties.
           </p>
+        </div>
+      </div>
+
+      {/* Active Handover Queue */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-amber-600" />
+              Active Handover & Return Queue
+            </h2>
+            <p className="text-xs text-slate-500">
+              Pending Step 7 physical check-ins and Step 8 post-session return inspections.
+            </p>
+          </div>
+          <Link href="/bookings">
+            <Button variant="outline" size="sm" className="text-xs">
+              View All Bookings
+            </Button>
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {activeBookings.map((b) => {
+            const res = SEED_RESOURCES.find((r) => r.id === b.resource_id);
+            const isApproved = b.status === "approved";
+
+            return (
+              <div
+                key={b.id}
+                className="p-5 rounded-2xl border border-slate-200 bg-white shadow-sm flex flex-col justify-between space-y-4"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Badge
+                      variant={isApproved ? "success" : "default"}
+                      className={`text-[10px] uppercase font-bold ${
+                        !isApproved ? "bg-indigo-600" : ""
+                      }`}
+                    >
+                      {isApproved ? "Step 7: Ready for Check-in" : "Step 8: In Use / Awaiting Return"}
+                    </Badge>
+                    <span className="text-[11px] font-mono text-slate-400">#{b.id}</span>
+                  </div>
+
+                  <h3 className="font-bold text-base text-slate-900">{res?.name || "Equipment"}</h3>
+                  <p className="text-xs text-slate-500">{res?.location}</p>
+
+                  <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-xs text-slate-700 space-y-1">
+                    <div className="flex items-center gap-1 text-slate-500">
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>
+                        Slot: {new Date(b.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} – {new Date(b.end_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                    </div>
+                    <p className="text-slate-600 italic">&quot;{b.purpose}&quot;</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                  <Link
+                    href={`/bookings/${b.id}`}
+                    className="text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-1"
+                  >
+                    Details <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+
+                  {isApproved ? (
+                    <Link href={`/bookings/${b.id}/check-in`}>
+                      <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs gap-1">
+                        <ClipboardCheck className="w-3.5 h-3.5" />
+                        Execute Check-in
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Link href={`/bookings/${b.id}/return`}>
+                      <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white text-xs gap-1">
+                        <ClipboardCheck className="w-3.5 h-3.5" />
+                        Execute Return
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -129,4 +219,3 @@ export default async function ManagerDashboard() {
     </div>
   );
 }
-

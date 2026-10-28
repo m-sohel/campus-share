@@ -82,6 +82,16 @@ export const BOOKING_TRANSITIONS: Record<
       allowedActors: ["user", "admin"],
       description: "Borrower reviewed conditions, signed safety waiver, and confirmed booking.",
     },
+    in_use: {
+      allowedActors: ["owner", "manager", "admin"],
+      requiresConditionRecord: "check_in",
+      description: "Physical handover completed directly with initial condition inspection recorded.",
+    },
+    checked_in: {
+      allowedActors: ["owner", "manager", "admin"],
+      requiresConditionRecord: "check_in",
+      description: "Physical handover completed with initial condition inspection recorded.",
+    },
     cancelled: {
       allowedActors: ["user", "owner", "manager", "admin"],
       requiresReason: true,
@@ -89,6 +99,11 @@ export const BOOKING_TRANSITIONS: Record<
     },
   },
   confirmed: {
+    in_use: {
+      allowedActors: ["owner", "manager", "admin"],
+      requiresConditionRecord: "check_in",
+      description: "Physical handover completed with initial condition inspection recorded.",
+    },
     checked_in: {
       allowedActors: ["owner", "manager", "admin", "user"],
       requiresConditionRecord: "check_in",
@@ -98,6 +113,18 @@ export const BOOKING_TRANSITIONS: Record<
       allowedActors: ["owner", "manager", "admin", "user"],
       requiresReason: true,
       description: "No-show or last-minute cancellation before handover.",
+    },
+  },
+  in_use: {
+    returned: {
+      allowedActors: ["owner", "manager", "admin"],
+      requiresConditionRecord: "return",
+      description: "Resource returned; post-session inspection recorded.",
+    },
+    flagged_incident: {
+      allowedActors: ["owner", "manager", "admin", "user"],
+      requiresReason: true,
+      description: "Damage, safety breach, or malfunction reported during active period.",
     },
   },
   checked_in: {

@@ -14,6 +14,7 @@ import {
   Sparkles,
   Compass,
   Building2,
+  ClipboardCheck,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -115,6 +116,20 @@ export function Navbar({ currentUser }: NavbarProps) {
               <span className="flex items-center gap-1.5">
                 <Compass className="w-4 h-4" />
                 Catalog
+              </span>
+            </Link>
+
+            <Link
+              href="/bookings"
+              className={`px-3 py-2 text-sm font-medium rounded-md transition ${
+                pathname.startsWith("/bookings")
+                  ? "bg-slate-100 text-indigo-600 dark:bg-slate-800 dark:text-indigo-400 font-semibold"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800/60"
+              }`}
+            >
+              <span className="flex items-center gap-1.5">
+                <ClipboardCheck className="w-4 h-4" />
+                Bookings & Handover
               </span>
             </Link>
 

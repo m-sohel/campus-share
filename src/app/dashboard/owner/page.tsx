@@ -11,6 +11,7 @@ import {
   FileCheck,
   CheckCircle2,
   UserCheck,
+  ClipboardCheck,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,12 @@ export default async function OwnerDashboard() {
           </div>
 
           <div className="flex items-center gap-3">
+            <Link href="/bookings">
+              <Button size="sm" className="bg-white/10 hover:bg-white/20 text-white border border-white/20 gap-1.5 text-xs">
+                <ClipboardCheck className="w-4 h-4" />
+                Handover Desk
+              </Button>
+            </Link>
             <div className="bg-white/10 backdrop-blur rounded-xl px-4 py-2 border border-white/10 text-center">
               <span className="text-[11px] uppercase tracking-wider text-indigo-200 block font-semibold">
                 Resources Listed

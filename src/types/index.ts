@@ -14,6 +14,7 @@ export type BookingStatus =
   | "approved"
   | "confirmed"
   | "checked_in"
+  | "in_use"
   | "returned"
   | "completed"
   | "flagged_incident"
@@ -24,11 +25,11 @@ export type ConditionStage = "check_in" | "return";
 
 export type ConditionGrade = "pristine" | "minor_wear" | "damaged" | "dirty" | "missing_parts";
 
-export type IncidentType = "damage" | "late_return" | "safety_violation" | "missing_item" | "conflict";
+export type IncidentType = "damage" | "late_return" | "safety_violation" | "missing_item" | "conflict" | "misuse";
 
 export type IncidentSeverity = "low" | "medium" | "high" | "critical";
 
-export type IncidentStatus = "reported" | "under_review" | "resolved" | "escalated";
+export type IncidentStatus = "draft" | "reported" | "under_review" | "resolved" | "escalated";
 
 export type NotificationType = "info" | "action_required" | "warning" | "success";
 
@@ -150,8 +151,10 @@ export interface ConditionRecord {
   booking_id: string;
   stage: ConditionStage;
   recorded_by: string;
+  recorded_by_name?: string;
   status: ConditionGrade;
   notes?: string | null;
+  items?: Array<{ item: string; state: "ok" | "minor_issue" | "damaged"; notes?: string }>;
   checklist?: Record<string, boolean> | null;
   media_urls?: string[];
   created_at: string;
