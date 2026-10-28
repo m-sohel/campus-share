@@ -71,3 +71,4 @@ export async function markNotificationAsRead(notificationId: string, userId: str
 
   return !error;
 }
+

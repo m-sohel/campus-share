@@ -371,3 +371,4 @@ export function OwnerInboxList({ initialInbox, actorId }: OwnerInboxListProps) {
     </div>
   );
 }
+

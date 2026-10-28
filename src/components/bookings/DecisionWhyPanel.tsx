@@ -141,3 +141,4 @@ export function DecisionWhyPanel({ explanation, className = "" }: DecisionWhyPan
     </Card>
   );
 }
+

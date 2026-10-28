@@ -249,3 +249,4 @@ export function UserBookingsList({ bookings: initialBookings, userId }: UserBook
     </div>
   );
 }
+
