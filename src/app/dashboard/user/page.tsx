@@ -17,6 +17,7 @@ import { UserBookingsList, UserBookingItem } from "@/components/bookings/UserBoo
 import { getSupabaseAdminClient } from "@/backend/client";
 import { explainBookingDecision } from "@/lib/rules/decision-explanation";
 import { Booking, Resource } from "@/types";
+import { FairUseMeter } from "@/components/fairness/FairUseMeter";
 
 export default async function UserDashboard() {
   const user = await requireRole(["user", "admin"]);
@@ -130,6 +131,9 @@ export default async function UserDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Stage 7: Fair Use Meter & Quota Progress */}
+      <FairUseMeter userId={user.id} />
 
       {/* Verified Credentials Section */}
       <div className="space-y-4">

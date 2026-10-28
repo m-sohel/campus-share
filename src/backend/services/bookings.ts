@@ -147,6 +147,23 @@ export async function createBookingRequest(
     };
   }
 
+  // 4B. Run pure fairness quota & cooldown evaluation (Stage 7 Fairness Engine)
+  const reqDurationHours =
+    Math.max(0.5, (new Date(input.endTime).getTime() - new Date(input.startTime).getTime()) / 3600000);
+  const { getUserFairUseStats } = await import("./fairness");
+  const fairnessResult = await getUserFairUseStats(
+    input.userId,
+    resource.category,
+    reqDurationHours
+  );
+
+  if (!fairnessResult.isAllowed) {
+    return {
+      success: false,
+      error: fairnessResult.violations.join(" "),
+    };
+  }
+
   // 5. Fetch existing active reservations for conflict evaluation
   const { data: existingBookings } = await supabase
     .from("bookings")
@@ -492,6 +509,14 @@ export async function reviewBookingRequest(
     type: targetStatus === "approved" ? "success" : targetStatus === "waitlisted" ? "warning" : "info",
     link: `/dashboard/user?bookingId=${booking.id}`,
   });
+
+  // 11. Stage 7 Cascading Waitlist Offer: Offer vacated slot to top waitlisted candidate
+  try {
+    const { handleBookingCancelledCascade } = await import("./waitlist");
+    await handleBookingCancelledCascade(booking.id);
+  } catch (err) {
+    console.error("Waitlist cascade error:", err);
+  }
 
   return {
     success: true,

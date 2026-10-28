@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { getAuditLogEntries } from "@/backend/services/audit";
 import { AuditLogViewer } from "@/components/admin/AuditLogViewer";
+import { FairnessSettingsForm } from "@/components/admin/FairnessSettingsForm";
+import { getFairnessSettings } from "@/backend/services/fairness";
 import { getSupabaseAdminClient } from "@/backend/client";
 
 export default async function AdminDashboard() {
@@ -20,9 +22,11 @@ export default async function AdminDashboard() {
   // Fetch real live audit log entries from Supabase
   let auditEntries: any[] = [];
   let actors: { id: string; name: string; role: string }[] = [];
+  let fairnessSettings = undefined;
 
   try {
     auditEntries = await getAuditLogEntries({ limit: 100 });
+    fairnessSettings = await getFairnessSettings();
     const supabase = getSupabaseAdminClient();
     const { data: profiles } = await supabase.from("profiles").select("id, full_name, role");
     actors = (profiles || []).map((p: any) => ({ id: p.id, name: p.full_name, role: p.role }));
@@ -114,6 +118,9 @@ export default async function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Stage 7: Fairness Policy & Anti-Monopoly Settings */}
+      <FairnessSettingsForm initialSettings={fairnessSettings} />
 
       {/* Stage 5: Live Cryptographic Audit Trail Viewer */}
       <AuditLogViewer initialEntries={auditEntries} actors={actors} />
