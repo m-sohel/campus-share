@@ -1,6 +1,5 @@
 import { requireRole } from "@/lib/auth/role-guard";
-import { SEED_CREDENTIALS, SEED_RESOURCES } from "@/lib/data/seed-data";
-import { getAllBookings } from "@/lib/data/store";
+import { getAllBookings, getNotifications, getCredentials, getAllResources } from "@/lib/data/store";
 import { checkEligibility } from "@/lib/rules/eligibility";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +15,9 @@ import {
   Sparkles,
   QrCode,
   ArrowRight,
+  Bell,
+  Calendar,
+  History,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -24,12 +26,36 @@ export default async function UserDashboard() {
   const user = await requireRole(["user", "admin"]);
 
   // Fetch credentials for this user
-  const userCredentials = SEED_CREDENTIALS.filter((c) => c.user_id === user.id);
+  const userCredentials = await getCredentials(user.id);
+  const allResources = await getAllResources();
 
-  // Run eligibility checks on all 8 resources
-  const eligibilitySummaries = SEED_RESOURCES.map((res) => {
+  // Fetch user reservations
+  const allBookings = await getAllBookings();
+  const userBookings = allBookings.filter((b) => b.user_id === user.id);
+
+  // Split bookings by categories
+  const activeAndUpcoming = userBookings.filter(
+    (b) => b.status === "approved" || b.status === "in_use" || b.status === "confirmed"
+  );
+  const pendingRequests = userBookings.filter(
+    (b) =>
+      b.status === "pending_review" ||
+      b.status === "pending_verification" ||
+      b.status === "waitlisted" ||
+      b.status === "rejected"
+  );
+  const pastBookings = userBookings.filter(
+    (b) => b.status === "returned" || b.status === "completed" || b.status === "flagged_incident"
+  );
+
+  // Notifications
+  const notifications = await getNotifications(user.id);
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
+
+  // Run eligibility checks on all resources
+  const eligibilitySummaries = allResources.map((res) => {
     const check = checkEligibility(
-      res.requirements.map((r, idx) => ({
+      (res.requirements || []).map((r, idx) => ({
         id: `req-${idx}`,
         resource_id: res.id,
         credential_type: r.credential_type,
@@ -56,10 +82,6 @@ export default async function UserDashboard() {
     };
   });
 
-  // Fetch user reservations
-  const allBookings = await getAllBookings();
-  const userBookings = allBookings.filter((b) => b.user_id === user.id);
-
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 space-y-8">
       {/* Header Profile Banner */}
@@ -83,6 +105,12 @@ export default async function UserDashboard() {
           </div>
 
           <div className="flex items-center gap-3">
+            <Link href="/judge">
+              <Button size="sm" variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/20 text-xs">
+                Judge Script
+              </Button>
+            </Link>
+
             <div className="bg-white/10 backdrop-blur rounded-xl px-4 py-2 border border-white/10 text-center">
               <span className="text-[11px] uppercase tracking-wider text-indigo-200 block font-semibold">
                 Reputation Score
@@ -96,56 +124,160 @@ export default async function UserDashboard() {
         </div>
       </div>
 
-      {/* User Reservations & Digital Handover Passes */}
-      {userBookings.length > 0 && (
-        <div className="rounded-2xl border border-indigo-200 bg-white p-5 shadow-sm space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-            <div>
-              <h2 className="font-bold text-base text-slate-900 flex items-center gap-2">
-                <QrCode className="w-5 h-5 text-indigo-600" />
-                My Active Reservations & Digital Passes
-              </h2>
-              <p className="text-xs text-slate-500">
-                Present your QR code pass to station technicians for physical check-in and handover.
-              </p>
-            </div>
-            <Link href="/bookings">
-              <Button variant="outline" size="sm" className="text-xs">
-                All Bookings
-              </Button>
-            </Link>
-          </div>
+      {/* Quick Stats Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold block">
+            Active / Upcoming
+          </span>
+          <span className="text-2xl font-extrabold text-indigo-600 mt-1 block">
+            {activeAndUpcoming.length}
+          </span>
+          <span className="text-[11px] text-slate-500">Passes & In-Use</span>
+        </div>
 
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold block">
+            Requests in Queue
+          </span>
+          <span className="text-2xl font-extrabold text-amber-600 mt-1 block">
+            {pendingRequests.length}
+          </span>
+          <span className="text-[11px] text-slate-500">Under faculty review</span>
+        </div>
+
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold block">
+            Completed Sessions
+          </span>
+          <span className="text-2xl font-extrabold text-emerald-600 mt-1 block">
+            {pastBookings.length}
+          </span>
+          <span className="text-[11px] text-slate-500">Condition diff logged</span>
+        </div>
+
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold block">
+            Unread Alerts
+          </span>
+          <span className="text-2xl font-extrabold text-rose-600 mt-1 block">
+            {unreadCount}
+          </span>
+          <span className="text-[11px] text-slate-500">Notification updates</span>
+        </div>
+      </div>
+
+      {/* Active & Upcoming Bookings (with QR passes) */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <QrCode className="w-5 h-5 text-indigo-600" />
+              Active & Upcoming Reservations
+            </h2>
+            <p className="text-xs text-slate-500">
+              Present digital QR passes to station technicians for physical check-in and handover.
+            </p>
+          </div>
+          <Link href="/bookings">
+            <Button variant="outline" size="sm" className="text-xs">
+              View Handover Hub
+            </Button>
+          </Link>
+        </div>
+
+        {activeAndUpcoming.length === 0 ? (
+          <div className="p-8 rounded-xl border border-dashed border-slate-300 text-center text-xs text-slate-500 bg-slate-50">
+            No active or upcoming bookings right now. Explore the catalog below to request equipment access.
+          </div>
+        ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {userBookings.map((b) => {
-              const res = SEED_RESOURCES.find((r) => r.id === b.resource_id);
+            {activeAndUpcoming.map((b) => {
+              const res = allResources.find((r) => r.id === b.resource_id);
+              const isApproved = b.status === "approved";
               return (
                 <div
                   key={b.id}
-                  className="p-4 rounded-xl border border-slate-200 bg-slate-50/60 flex items-center justify-between gap-3"
+                  className="p-5 rounded-2xl border border-indigo-200 bg-white shadow-sm flex flex-col justify-between space-y-3"
                 >
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
                       <Badge
-                        variant={b.status === "approved" ? "success" : "default"}
-                        className={`text-[9px] uppercase font-bold ${
-                          b.status === "in_use" ? "bg-indigo-600" : ""
-                        }`}
+                        variant={isApproved ? "success" : "default"}
+                        className={`text-[9px] uppercase font-bold ${!isApproved ? "bg-indigo-600" : ""}`}
                       >
-                        {b.status.replace("_", " ")}
+                        {isApproved ? "Approved • Ready for Handover" : "Currently In Use"}
                       </Badge>
                       <span className="text-[10px] font-mono text-slate-400">#{b.id}</span>
                     </div>
-                    <p className="font-bold text-sm text-slate-900">{res?.name}</p>
+
+                    <h3 className="font-bold text-base text-slate-900">{res?.name}</h3>
                     <p className="text-xs text-slate-500">{res?.location}</p>
+
+                    <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-xs text-slate-700">
+                      <div className="flex items-center gap-1 text-slate-500 mb-1">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>
+                          Slot: {new Date(b.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} – {new Date(b.end_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                      </div>
+                      <p className="italic text-slate-600 line-clamp-1">&quot;{b.purpose}&quot;</p>
+                    </div>
                   </div>
 
-                  <Link href={`/bookings/${b.id}`}>
-                    <Button size="sm" className="h-8 text-xs bg-indigo-600 hover:bg-indigo-700 text-white gap-1 shrink-0">
-                      <QrCode className="w-3.5 h-3.5" />
-                      View Pass & Diff
-                    </Button>
-                  </Link>
+                  <div className="pt-2 flex items-center justify-between border-t border-slate-100">
+                    <span className="text-[11px] text-emerald-700 font-medium flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Verified Clearance
+                    </span>
+
+                    <Link href={`/bookings/${b.id}`}>
+                      <Button size="sm" className="h-8 text-xs bg-indigo-600 hover:bg-indigo-700 text-white gap-1.5 font-bold">
+                        <QrCode className="w-3.5 h-3.5" /> View Pass & Diff
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Requests Queue & Status */}
+      {pendingRequests.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
+              <Clock className="w-4 h-4 text-amber-600" />
+              Requests & Application Status
+            </h3>
+            <Badge variant="outline">{pendingRequests.length} Active</Badge>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {pendingRequests.map((b) => {
+              const res = allResources.find((r) => r.id === b.resource_id);
+              let statusBadge = <Badge variant="warning">Under Review</Badge>;
+              let statusExplanation = "Awaiting human review by station owner / manager.";
+
+              if (b.status === "waitlisted") {
+                statusBadge = <Badge variant="outline" className="border-amber-400 text-amber-800">Waitlisted</Badge>;
+                statusExplanation = "Contested slot. You are in fair-share priority line.";
+              } else if (b.status === "rejected") {
+                statusBadge = <Badge variant="destructive">Declined</Badge>;
+                statusExplanation = b.rejection_reason || "Declined with plain-language explanation.";
+              }
+
+              return (
+                <div key={b.id} className="p-4 rounded-xl border border-slate-200 bg-white shadow-sm space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-sm text-slate-900">{res?.name}</span>
+                    {statusBadge}
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed">{statusExplanation}</p>
+                  <p className="text-[11px] text-slate-500 italic bg-slate-50 p-2 rounded border border-slate-100">
+                    &quot;{b.purpose}&quot;
+                  </p>
                 </div>
               );
             })}
@@ -153,71 +285,51 @@ export default async function UserDashboard() {
         </div>
       )}
 
-      {/* Grid: Credentials & Qualifications */}
+      {/* Grid: Credentials & Notifications */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left col: My Verified Credentials */}
         <div className="lg:col-span-1 space-y-4">
           <Card className="border-slate-200 shadow-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <FileBadge className="w-5 h-5 text-indigo-600" />
-                My Verified Credentials
-              </CardTitle>
-              <CardDescription>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <FileBadge className="w-5 h-5 text-indigo-600" />
+                  My Qualifications
+                </CardTitle>
+                <Link href="/credentials/request">
+                  <Button variant="outline" size="sm" className="h-7 text-xs">
+                    + Request
+                  </Button>
+                </Link>
+              </div>
+              <CardDescription className="text-xs">
                 Certifications and safety clearance on file.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {userCredentials.length === 0 ? (
-                <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 text-amber-900 text-sm">
-                  <p className="font-semibold flex items-center gap-1.5">
-                    <AlertTriangle className="w-4 h-4 text-amber-600" />
-                    No certifications registered yet
-                  </p>
-                  <p className="text-xs text-amber-700 mt-1">
-                    You can still book resources that require zero safety endorsements, or request verification for external licenses.
-                  </p>
+                <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-amber-900 text-xs">
+                  No certifications registered yet. Request endorsements to unlock Class 4 laser cutters and cleanrooms.
                 </div>
               ) : (
-                userCredentials.map((cred) => {
-                  let badge = <Badge variant="success">Verified</Badge>;
-                  let icon = <CheckCircle2 className="w-4 h-4 text-emerald-600" />;
-
-                  if (cred.status === "expired") {
-                    badge = <Badge variant="destructive">Expired</Badge>;
-                    icon = <XCircle className="w-4 h-4 text-rose-600" />;
-                  } else if (cred.status === "pending") {
-                    badge = <Badge variant="warning">Under Review</Badge>;
-                    icon = <Clock className="w-4 h-4 text-amber-600" />;
-                  } else if (cred.status === "revoked") {
-                    badge = <Badge variant="destructive">Revoked</Badge>;
-                    icon = <XCircle className="w-4 h-4 text-rose-600" />;
-                  }
-
-                  return (
-                    <div
-                      key={cred.id}
-                      className="p-3 rounded-lg border border-slate-200 bg-slate-50 space-y-1.5"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <span className="font-semibold text-xs text-slate-900 leading-snug">
-                          {cred.title}
-                        </span>
-                        {badge}
-                      </div>
-                      {cred.verification_notes && (
-                        <p className="text-[11px] text-slate-600 bg-white p-1.5 rounded border border-slate-200">
-                          <strong>Note:</strong> {cred.verification_notes}
-                        </p>
-                      )}
-                      <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1">
-                        <span>Type: {cred.credential_type}</span>
-                        {cred.expires_at && (
-                          <span>Exp: {new Date(cred.expires_at).toLocaleDateString()}</span>
-                        )}
-                      </div>
+                userCredentials.map((cred) => (
+                  <div
+                    key={cred.id}
+                    className="p-3 rounded-lg border border-slate-200 bg-slate-50 space-y-1"
+                  >
+                    <div className="flex items-start justify-between gap-1">
+                      <span className="font-semibold text-xs text-slate-900 leading-snug">
+                        {cred.title}
+                      </span>
+                      <Badge variant="success" className="text-[9px]">Verified</Badge>
                     </div>
-                  );
-                })
+                    {cred.verification_notes && (
+                      <p className="text-[11px] text-slate-600 bg-white p-1.5 rounded border border-slate-200">
+                        {cred.verification_notes}
+                      </p>
+                    )}
+                  </div>
+                ))
               )}
             </CardContent>
           </Card>
@@ -229,17 +341,17 @@ export default async function UserDashboard() {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-lg flex items-center gap-2">
+                  <CardTitle className="text-base flex items-center gap-2">
                     <Sparkles className="w-5 h-5 text-indigo-600" />
                     Resource Eligibility Matrix
                   </CardTitle>
-                  <CardDescription>
-                    Plain-language requirement checks evaluated against your profile in real-time.
+                  <CardDescription className="text-xs">
+                    Plain-language requirement checks evaluated in real time.
                   </CardDescription>
                 </div>
                 <Link href="/">
-                  <Button variant="outline" size="sm">
-                    Browse All Catalog
+                  <Button variant="outline" size="sm" className="text-xs">
+                    Full Catalog
                   </Button>
                 </Link>
               </div>
@@ -248,70 +360,36 @@ export default async function UserDashboard() {
               {eligibilitySummaries.map(({ resource, eligibility }) => (
                 <div
                   key={resource.id}
-                  className={`p-4 rounded-xl border transition ${
+                  className={`p-3.5 rounded-xl border transition ${
                     eligibility.isEligible
                       ? "border-emerald-200 bg-emerald-50/40"
                       : "border-slate-200 bg-white"
                   }`}
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1.5">
                     <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm text-slate-900">
-                          {resource.name}
-                        </span>
-                        {resource.is_high_demand && (
-                          <Badge variant="destructive" className="text-[9px] uppercase">
-                            High Demand
-                          </Badge>
-                        )}
-                      </div>
-                      <span className="text-xs text-slate-500 capitalize">
+                      <span className="font-bold text-sm text-slate-900">{resource.name}</span>
+                      <span className="text-xs text-slate-500 block">
                         {resource.category.replace("_", " ")} • {resource.location}
                       </span>
                     </div>
 
                     <div>
                       {eligibility.isEligible ? (
-                        <Badge variant="success" className="gap-1">
-                          <CheckCircle2 className="w-3 h-3" />
-                          Eligible to Reserve
+                        <Badge variant="success" className="text-[10px] gap-1">
+                          <CheckCircle2 className="w-3 h-3" /> Eligible to Reserve
                         </Badge>
                       ) : (
-                        <Badge variant="destructive" className="gap-1">
-                          <XCircle className="w-3 h-3" />
-                          Requirements Missing
+                        <Badge variant="destructive" className="text-[10px] gap-1">
+                          <XCircle className="w-3 h-3" /> Prerequisites Missing
                         </Badge>
                       )}
                     </div>
                   </div>
 
-                  {/* Plain Language Explanation */}
-                  <div className="text-xs text-slate-700 bg-white/80 p-2.5 rounded-lg border border-slate-200/80">
-                    <span className="font-semibold text-slate-900 block mb-1">
-                      System Verification:
-                    </span>
-                    <p className="leading-relaxed">{eligibility.summary}</p>
-                    {eligibility.checks.length > 0 && (
-                      <ul className="mt-2 space-y-1 pl-1">
-                        {eligibility.checks.map((c, i) => (
-                          <li
-                            key={i}
-                            className={`flex items-start gap-1.5 ${
-                              c.met ? "text-emerald-700" : "text-rose-700"
-                            }`}
-                          >
-                            {c.met ? (
-                              <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                            ) : (
-                              <XCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                            )}
-                            <span>{c.reason}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed bg-white/80 p-2 rounded border border-slate-100">
+                    {eligibility.summary}
+                  </p>
                 </div>
               ))}
             </CardContent>
@@ -321,4 +399,3 @@ export default async function UserDashboard() {
     </div>
   );
 }
-

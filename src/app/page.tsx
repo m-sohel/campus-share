@@ -8,6 +8,7 @@ import {
   ArrowRight,
   FileBadge,
   Lock,
+  Award,
 } from "lucide-react";
 
 export default async function HomePage() {
@@ -20,6 +21,26 @@ export default async function HomePage() {
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-b from-indigo-50/60 via-white to-white py-16 sm:py-24 border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
+          {/* Judge Evaluation Callout Banner */}
+          <div className="mb-6 mx-auto max-w-2xl bg-amber-50 border border-amber-300 rounded-2xl p-4 text-amber-950 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-2.5 text-left">
+              <Award className="w-5 h-5 text-amber-600 shrink-0" />
+              <div>
+                <strong className="block text-xs font-bold uppercase tracking-wider text-amber-900">
+                  Hackathon Judge Evaluation Tour
+                </strong>
+                <p className="text-xs text-amber-800">
+                  Follow the 5-minute interactive script covering the complete 10-step lifecycle.
+                </p>
+              </div>
+            </div>
+            <Link href="/judge" className="shrink-0 w-full sm:w-auto">
+              <Button size="sm" className="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold gap-1 shadow-sm">
+                Open /judge Script <ArrowRight className="w-3.5 h-3.5" />
+              </Button>
+            </Link>
+          </div>
+
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-100 text-indigo-800 text-xs font-semibold mb-6 shadow-sm">
             <ShieldCheck className="w-4 h-4 text-indigo-600" />
             University Campus & Community Makerspace Trust Network

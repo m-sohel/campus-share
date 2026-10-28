@@ -1,4 +1,16 @@
-import { Resource, Credential, AuditLogEntry, ResourceRequirement, Booking, ConditionRecord, Incident, Profile } from "@/types";
+import {
+  Resource,
+  Credential,
+  AuditLogEntry,
+  ResourceRequirement,
+  Booking,
+  BookingStatus,
+  UserRole,
+  ConditionRecord,
+  Incident,
+  Profile,
+  Notification,
+} from "@/types";
 import { SEED_RESOURCES, SEED_CREDENTIALS, SEED_USERS } from "./seed-data";
 import { createClientServer } from "@/lib/supabase/server";
 import { computeAuditHash } from "@/lib/rules/audit-verifier";
@@ -378,7 +390,7 @@ let runtimeBookings: Booking[] = [
     created_at: new Date(now - 4 * oneHour).toISOString(),
     updated_at: new Date(now - oneHour).toISOString(),
   },
-  // 4. Completed Reservation with both condition records logged
+  // 4. Completed Reservation with both condition records logged (Sony FX3)
   {
     id: "b-completed-camera",
     resource_id: "20000000-0000-0000-0000-000000000005", // Sony FX3
@@ -391,6 +403,77 @@ let runtimeBookings: Booking[] = [
     reviewed_by: "00000000-0000-0000-0000-000000000002",
     created_at: new Date(now - 30 * oneHour).toISOString(),
     updated_at: new Date(now - 20 * oneHour).toISOString(),
+  },
+  // 5. Pending Review - Cleanroom Lithography Lab (Sarah Jenkins requested, awaiting Elena Rostova review)
+  {
+    id: "b-pending-review-cleanroom",
+    resource_id: "20000000-0000-0000-0000-000000000006", // Cleanroom Lithography
+    user_id: "00000000-0000-0000-0000-000000000005", // Sarah Jenkins
+    start_time: new Date(now + 24 * oneHour).toISOString(),
+    end_time: new Date(now + 28 * oneHour).toISOString(),
+    status: "pending_review",
+    purpose: "E-beam mask exposure for microfluidic biosensor prototype.",
+    fairness_score: 9.4,
+    reviewed_by: null,
+    created_at: new Date(now - 2 * oneHour).toISOString(),
+    updated_at: new Date(now - 2 * oneHour).toISOString(),
+  },
+  // 6. Waitlisted - Contested Epilog Laser Cutter slot (David Kim, startup prototype)
+  {
+    id: "b-waitlisted-laser",
+    resource_id: "20000000-0000-0000-0000-000000000001", // Epilog Laser Cutter
+    user_id: "00000000-0000-0000-0000-000000000008", // David Kim
+    start_time: new Date(now + 5 * oneHour).toISOString(),
+    end_time: new Date(now + 7 * oneHour).toISOString(),
+    status: "waitlisted",
+    purpose: "Cutting acrylic housings for wearable sensor test batch.",
+    fairness_score: 7.8,
+    reviewed_by: "00000000-0000-0000-0000-000000000002",
+    created_at: new Date(now - 6 * oneHour).toISOString(),
+    updated_at: new Date(now - 5 * oneHour).toISOString(),
+  },
+  // 7. Pending Verification - DJI Inspire Drone (Maya Lin, license awaiting check)
+  {
+    id: "b-pending-verification-drone",
+    resource_id: "20000000-0000-0000-0000-000000000007", // DJI Inspire 3
+    user_id: "00000000-0000-0000-0000-000000000009", // Maya Lin
+    start_time: new Date(now + 48 * oneHour).toISOString(),
+    end_time: new Date(now + 52 * oneHour).toISOString(),
+    status: "pending_verification",
+    purpose: "Aerial thermography survey of campus solar array.",
+    fairness_score: 8.1,
+    reviewed_by: null,
+    created_at: new Date(now - 1 * oneHour).toISOString(),
+    updated_at: new Date(now - 1 * oneHour).toISOString(),
+  },
+  // 8. Flagged Incident - Drone Propeller Crack (Lucas Wright)
+  {
+    id: "b-flagged-incident-drone",
+    resource_id: "20000000-0000-0000-0000-000000000007", // DJI Inspire 3
+    user_id: "00000000-0000-0000-0000-000000000010", // Lucas Wright
+    start_time: new Date(now - 15 * oneHour).toISOString(),
+    end_time: new Date(now - 12 * oneHour).toISOString(),
+    status: "flagged_incident",
+    purpose: "High-speed outdoor obstacle avoidance flight recording.",
+    fairness_score: 6.5,
+    reviewed_by: "00000000-0000-0000-0000-000000000004",
+    created_at: new Date(now - 18 * oneHour).toISOString(),
+    updated_at: new Date(now - 12 * oneHour).toISOString(),
+  },
+  // 9. Rejected - PCB Printer Safety Violation Conflict (Lucas Wright)
+  {
+    id: "b-rejected-pcb",
+    resource_id: "20000000-0000-0000-0000-000000000004", // Voltera V-One
+    user_id: "00000000-0000-0000-0000-000000000010", // Lucas Wright
+    start_time: new Date(now - 2 * 24 * oneHour).toISOString(),
+    end_time: new Date(now - 2 * 24 * oneHour + 3 * oneHour).toISOString(),
+    status: "rejected",
+    purpose: "Double-sided PCB trace printing for transmitter unit.",
+    fairness_score: 5.2,
+    rejection_reason: "Borrower has active safety violation record. Must complete PCB chemical safety renewal workshop first.",
+    reviewed_by: "00000000-0000-0000-0000-000000000004",
+    created_at: new Date(now - 3 * 24 * oneHour).toISOString(),
+    updated_at: new Date(now - 2 * 24 * oneHour).toISOString(),
   },
 ];
 
@@ -434,9 +517,143 @@ let runtimeConditionRecords: ConditionRecord[] = [
     media_urls: [],
     created_at: new Date(now - oneHour).toISOString(),
   },
+  // Check-in & Return records for b-completed-camera (Sony FX3)
+  {
+    id: "cond-checkin-camera",
+    booking_id: "b-completed-camera",
+    stage: "check_in",
+    recorded_by: "00000000-0000-0000-0000-000000000002", // Elena Rostova
+    recorded_by_name: "Prof. Elena Rostova",
+    status: "pristine",
+    notes: "Full cinema kit handed over. Sensor spotless, 24-70mm GM lens in pristine condition.",
+    items: [
+      { item: "Camera body and mount intact", state: "ok", notes: "Sensor clean" },
+      { item: "Lens glass free of scratches and fungus", state: "ok", notes: "Optics pristine" },
+      { item: "Batteries (2x) and charger provided", state: "ok" },
+      { item: "CFexpress Type A card functional", state: "ok" },
+    ],
+    checklist: {},
+    media_urls: [],
+    created_at: new Date(now - 24 * oneHour).toISOString(),
+  },
+  {
+    id: "cond-return-camera",
+    booking_id: "b-completed-camera",
+    stage: "return",
+    recorded_by: "00000000-0000-0000-0000-000000000002",
+    recorded_by_name: "Prof. Elena Rostova",
+    status: "pristine",
+    notes: "Returned on time. Sensor cap attached, all accessories returned in protective Pelican case.",
+    items: [
+      { item: "Camera body and mount intact", state: "ok", notes: "Returned spotless" },
+      { item: "Lens glass free of scratches and fungus", state: "ok", notes: "Lens verified clean" },
+      { item: "Batteries (2x) and charger provided", state: "ok" },
+      { item: "CFexpress Type A card functional", state: "ok" },
+    ],
+    checklist: {},
+    media_urls: [],
+    created_at: new Date(now - 20 * oneHour).toISOString(),
+  },
 ];
 
-let runtimeIncidents: Incident[] = [];
+let runtimeIncidents: Incident[] = [
+  {
+    id: "inc-seed-drone-01",
+    booking_id: "b-flagged-incident-drone",
+    reporter_id: "00000000-0000-0000-0000-000000000004", // Jordan Taylor
+    type: "damage",
+    severity: "medium",
+    status: "draft", // In draft for review
+    description: "Post-flight motor mount hairline crack observed during return inspection. Awaiting technician sign-off.",
+    created_at: new Date(now - 12 * oneHour).toISOString(),
+  },
+];
+
+let runtimeNotifications: Notification[] = [
+  // For Sarah Jenkins (Borrower)
+  {
+    id: "notif-1",
+    user_id: "00000000-0000-0000-0000-000000000005",
+    title: "Reservation Approved: Epilog Laser Cutter",
+    message: "Your booking #b-approved-laser has been approved by Prof. Elena Rostova. Present your QR pass at Central Engineering Rm 142.",
+    type: "success",
+    is_read: false,
+    link: "/bookings/b-approved-laser",
+    created_at: new Date(now - 2 * oneHour).toISOString(),
+  },
+  {
+    id: "notif-2",
+    user_id: "00000000-0000-0000-0000-000000000005",
+    title: "Handover Reminder: Laser Prototyping",
+    message: "Your session starts soon. Please bring ANSI Z136 certified laser safety eyewear.",
+    type: "info",
+    is_read: false,
+    link: "/bookings/b-approved-laser",
+    created_at: new Date(now - 45 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "notif-3",
+    user_id: "00000000-0000-0000-0000-000000000005",
+    title: "Cleanroom Request Under Review",
+    message: "Request #b-pending-review-cleanroom passed automated checks and is awaiting faculty review.",
+    type: "info",
+    is_read: true,
+    link: "/dashboard/user",
+    created_at: new Date(now - 6 * oneHour).toISOString(),
+  },
+  // For Elena Rostova (Owner)
+  {
+    id: "notif-4",
+    user_id: "00000000-0000-0000-0000-000000000002",
+    title: "Action Required: Cleanroom Lithography Request",
+    message: "Sarah Jenkins submitted request #b-pending-review-cleanroom for bio-chip prototyping.",
+    type: "action_required",
+    is_read: false,
+    link: "/dashboard/owner",
+    created_at: new Date(now - 3 * oneHour).toISOString(),
+  },
+  {
+    id: "notif-5",
+    user_id: "00000000-0000-0000-0000-000000000002",
+    title: "Contested Slot on Epilog Laser",
+    message: "David Kim was waitlisted (#b-waitlisted-laser). Automated fairness score: 7.8.",
+    type: "info",
+    is_read: false,
+    link: "/dashboard/owner",
+    created_at: new Date(now - 5 * oneHour).toISOString(),
+  },
+  // For Jordan Taylor (Manager / Technician)
+  {
+    id: "notif-6",
+    user_id: "00000000-0000-0000-0000-000000000004",
+    title: "Station Handover Ready: Laser Cutter",
+    message: "Booking #b-approved-laser is ready for Step 7 physical inspection and handover sign-off.",
+    type: "action_required",
+    is_read: false,
+    link: "/bookings/b-approved-laser/check-in",
+    created_at: new Date(now - 1 * oneHour).toISOString(),
+  },
+  {
+    id: "notif-7",
+    user_id: "00000000-0000-0000-0000-000000000004",
+    title: "Return Due: Keysight Oscilloscope",
+    message: "Session ended for David Kim (#b-in-use-scope). Conduct Step 8 return inspection.",
+    type: "warning",
+    is_read: false,
+    link: "/bookings/b-in-use-scope/return",
+    created_at: new Date(now - 30 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "notif-8",
+    user_id: "00000000-0000-0000-0000-000000000004",
+    title: "Draft Incident: Drone Motor Mount",
+    message: "Hairline crack flagged on #b-flagged-incident-drone. Review physical evidence before sign-off.",
+    type: "warning",
+    is_read: true,
+    link: "/dashboard/manager",
+    created_at: new Date(now - 10 * oneHour).toISOString(),
+  },
+];
 
 /**
  * Retrieves all bookings.
@@ -688,7 +905,7 @@ export function getUserById(id: string): Profile | null {
 }
 
 /**
- * Retrieves all profiles.
+ * Retrieves all user profiles.
  */
 export function getAllUsers(): Profile[] {
   return SEED_USERS.map((u) => ({
@@ -703,5 +920,144 @@ export function getAllUsers(): Profile[] {
     updated_at: new Date().toISOString(),
   }));
 }
+
+/**
+ * Retrieves notifications, optionally filtered by user ID.
+ */
+export async function getNotifications(userId?: string): Promise<Notification[]> {
+  if (userId) {
+    return runtimeNotifications.filter((n) => n.user_id === userId);
+  }
+  return runtimeNotifications;
+}
+
+/**
+ * Marks a notification as read.
+ */
+export async function markNotificationAsRead(id: string): Promise<boolean> {
+  const notif = runtimeNotifications.find((n) => n.id === id);
+  if (notif) {
+    notif.is_read = true;
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Marks all notifications as read for a user.
+ */
+export async function markAllNotificationsAsRead(userId: string): Promise<boolean> {
+  let updated = false;
+  runtimeNotifications.forEach((n) => {
+    if (n.user_id === userId && !n.is_read) {
+      n.is_read = true;
+      updated = true;
+    }
+  });
+  return updated;
+}
+
+/**
+ * Creates a notification.
+ */
+export async function createNotification(
+  notification: Omit<Notification, "id" | "created_at" | "is_read">
+): Promise<Notification> {
+  const newNotif: Notification = {
+    id: `notif-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    ...notification,
+    is_read: false,
+    created_at: new Date().toISOString(),
+  };
+  runtimeNotifications.unshift(newNotif);
+  return newNotif;
+}
+
+/**
+ * Reviews a booking request (Step 6 of lifecycle: approve, reject, or waitlist).
+ */
+export async function reviewBooking(params: {
+  booking_id: string;
+  decision: "approved" | "rejected" | "waitlisted";
+  reason: string;
+  reviewer_id: string;
+  reviewer_role: UserRole;
+}): Promise<Booking> {
+  const booking = await getBookingById(params.booking_id);
+  if (!booking) throw new Error("Booking not found");
+
+  const prevStatus = booking.status;
+  const newStatus: BookingStatus = params.decision;
+
+  const updated = await saveBooking({
+    id: booking.id,
+    status: newStatus,
+    reviewed_by: params.reviewer_id,
+    rejection_reason: params.decision === "rejected" ? params.reason : null,
+  });
+
+  await logAuditEvent({
+    actor_id: params.reviewer_id,
+    actor_role: params.reviewer_role,
+    action: `BOOKING_${params.decision.toUpperCase()}` as any,
+    resource_type: "booking",
+    resource_id: booking.id,
+    previous_state: { status: prevStatus },
+    new_state: { status: newStatus, reason: params.reason },
+    reason: params.reason,
+  });
+
+  // Notify the borrower
+  await createNotification({
+    user_id: booking.user_id,
+    title: `Reservation ${params.decision === "approved" ? "Approved" : params.decision === "waitlisted" ? "Waitlisted" : "Declined"}`,
+    message: `Your booking #${booking.id} was marked ${params.decision}: "${params.reason}"`,
+    type: params.decision === "approved" ? "success" : params.decision === "waitlisted" ? "warning" : "action_required",
+    link: `/bookings/${booking.id}`,
+  });
+
+  return updated;
+}
+
+/**
+ * Calculates a resource's utilization percentage and label based on active and total reservations.
+ */
+export async function calculateResourceUtilization(
+  resourceId: string
+): Promise<{ percentage: number; label: string }> {
+  const bookings = await getAllBookings();
+  const resBookings = bookings.filter((b) => b.resource_id === resourceId && b.status !== "rejected" && b.status !== "cancelled");
+  const resource = await getResourceById(resourceId);
+
+  let score = 25;
+  if (resource?.is_high_demand) score += 35;
+  score += Math.min(35, resBookings.length * 15);
+
+  let label = "Normal Availability";
+  if (score >= 80) label = "High Demand (Heavy Utilization)";
+  else if (score >= 50) label = "Moderate Utilization";
+
+  return {
+    percentage: Math.min(95, score),
+    label,
+  };
+}
+
+// Snapshot storage for demo reset
+const INITIAL_BOOKINGS = JSON.parse(JSON.stringify(runtimeBookings));
+const INITIAL_CONDITION_RECORDS = JSON.parse(JSON.stringify(runtimeConditionRecords));
+const INITIAL_INCIDENTS = JSON.parse(JSON.stringify(runtimeIncidents));
+const INITIAL_NOTIFICATIONS = JSON.parse(JSON.stringify(runtimeNotifications));
+
+/**
+ * Safely restores all demo data to pristine initial state for judge reviews.
+ */
+export function resetDemoStore(): void {
+  runtimeBookings = JSON.parse(JSON.stringify(INITIAL_BOOKINGS));
+  runtimeConditionRecords = JSON.parse(JSON.stringify(INITIAL_CONDITION_RECORDS));
+  runtimeIncidents = JSON.parse(JSON.stringify(INITIAL_INCIDENTS));
+  runtimeNotifications = JSON.parse(JSON.stringify(INITIAL_NOTIFICATIONS));
+}
+
 
 

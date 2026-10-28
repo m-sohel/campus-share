@@ -1,6 +1,11 @@
 import { requireRole } from "@/lib/auth/role-guard";
-import { SEED_RESOURCES } from "@/lib/data/seed-data";
-import { getAllBookings } from "@/lib/data/store";
+import {
+  getAllBookings,
+  getAllResources,
+  getIncidents,
+  getUserById,
+  calculateResourceUtilization,
+} from "@/lib/data/store";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -10,22 +15,51 @@ import {
   Building2,
   Clock,
   ArrowRight,
-  Sparkles,
+  ShieldAlert,
+  Percent,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { BookingReviewCard } from "@/components/bookings/BookingReviewCard";
 
 export default async function ManagerDashboard() {
   const user = await requireRole(["manager", "admin"]);
 
+  const allResources = await getAllResources();
+
   // Resources assigned to this technician / manager
   const assignedResources =
     user.role === "admin"
-      ? SEED_RESOURCES
-      : SEED_RESOURCES.filter((r) => r.manager_id === user.id);
+      ? allResources
+      : allResources.filter((r) => r.manager_id === user.id);
 
-  const bookings = await getAllBookings();
-  const activeBookings = bookings.filter((b) => b.status === "approved" || b.status === "in_use");
+  const assignedResourceIds = new Set(assignedResources.map((r) => r.id));
+
+  const allBookings = await getAllBookings();
+  const incidents = await getIncidents();
+
+  // Pending reviews delegated to this manager
+  const pendingReviews = allBookings.filter(
+    (b) => (b.status === "pending_review" || b.status === "waitlisted") && (user.role === "admin" || assignedResourceIds.has(b.resource_id))
+  );
+
+  // Active Handovers (Steps 7 & 8)
+  const activeHandovers = allBookings.filter(
+    (b) => (b.status === "approved" || b.status === "in_use") && (user.role === "admin" || assignedResourceIds.has(b.resource_id))
+  );
+
+  // Incidents
+  const openIncidents = incidents.filter(
+    (inc) => inc.status === "draft" || inc.status === "under_review" || inc.status === "reported"
+  );
+
+  // Utilisation metrics
+  const utilizations = await Promise.all(
+    assignedResources.map(async (res) => {
+      const util = await calculateResourceUtilization(res.id);
+      return { resource: res, ...util };
+    })
+  );
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 space-y-8">
@@ -50,9 +84,14 @@ export default async function ManagerDashboard() {
           </div>
 
           <div className="flex items-center gap-3">
+            <Link href="/judge">
+              <Button size="sm" variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/20 text-xs">
+                Judge Script
+              </Button>
+            </Link>
             <div className="bg-white/10 backdrop-blur rounded-xl px-4 py-2 border border-white/10 text-center">
               <span className="text-[11px] uppercase tracking-wider text-amber-200 block font-semibold">
-                Equipment Delegated
+                Stations Supervised
               </span>
               <span className="text-2xl font-extrabold text-white">
                 {assignedResources.length}
@@ -75,28 +114,104 @@ export default async function ManagerDashboard() {
         </div>
       </div>
 
-      {/* Active Handover Queue */}
+      {/* KPI Stats Row */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold block">
+            Awaiting Check-in
+          </span>
+          <span className="text-2xl font-extrabold text-indigo-600 mt-1 block">
+            {activeHandovers.filter((b) => b.status === "approved").length}
+          </span>
+          <span className="text-[11px] text-slate-500">Step 7 Handover ready</span>
+        </div>
+
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold block">
+            In-Use / Return Due
+          </span>
+          <span className="text-2xl font-extrabold text-amber-600 mt-1 block">
+            {activeHandovers.filter((b) => b.status === "in_use").length}
+          </span>
+          <span className="text-[11px] text-slate-500">Step 8 Return inspection</span>
+        </div>
+
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold block">
+            Draft Incidents
+          </span>
+          <span className="text-2xl font-extrabold text-rose-600 mt-1 block">
+            {openIncidents.length}
+          </span>
+          <span className="text-[11px] text-slate-500">Variance review</span>
+        </div>
+
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold block">
+            Pending Reviews
+          </span>
+          <span className="text-2xl font-extrabold text-slate-800 mt-1 block">
+            {pendingReviews.length}
+          </span>
+          <span className="text-[11px] text-slate-500">Delegated approval queue</span>
+        </div>
+      </div>
+
+      {/* Step 6 Delegated Approvals Queue if any */}
+      {pendingReviews.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                <Clock className="w-5 h-5 text-amber-600" />
+                Delegated Reservation Approvals (Step 6)
+              </h2>
+              <p className="text-xs text-slate-500">
+                Facility requests assigned to your supervision desk awaiting decision.
+              </p>
+            </div>
+            <Badge variant="warning">{pendingReviews.length} Pending</Badge>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {pendingReviews.map((b) => {
+              const res = allResources.find((r) => r.id === b.resource_id);
+              const borrower = getUserById(b.user_id);
+              return (
+                <BookingReviewCard
+                  key={b.id}
+                  booking={b}
+                  resource={res}
+                  borrower={borrower}
+                />
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Active Handover & Return Queue (Steps 7 & 8) */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-amber-600" />
-              Active Handover & Return Queue
+              <ClipboardCheck className="w-5 h-5 text-indigo-600" />
+              Active Handover & Return Queue (Steps 7 & 8)
             </h2>
             <p className="text-xs text-slate-500">
-              Pending Step 7 physical check-ins and Step 8 post-session return inspections.
+              Approved bookings ready for check-in and active sessions ready for return diff inspection.
             </p>
           </div>
           <Link href="/bookings">
             <Button variant="outline" size="sm" className="text-xs">
-              View All Bookings
+              All Bookings
             </Button>
           </Link>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {activeBookings.map((b) => {
-            const res = SEED_RESOURCES.find((r) => r.id === b.resource_id);
+          {activeHandovers.map((b) => {
+            const res = allResources.find((r) => r.id === b.resource_id);
             const isApproved = b.status === "approved";
 
             return (
@@ -136,7 +251,7 @@ export default async function ManagerDashboard() {
                     href={`/bookings/${b.id}`}
                     className="text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-1"
                   >
-                    Details <ArrowRight className="w-3.5 h-3.5" />
+                    Details & Diff <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
 
                   {isApproved ? (
@@ -161,58 +276,88 @@ export default async function ManagerDashboard() {
         </div>
       </div>
 
-      {/* Assigned Equipment Grid */}
+      {/* Open Incidents (Step 9) */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-slate-900">
-            Supervised Equipment Stations
-          </h2>
-          <Link href="/">
-            <Button variant="outline" size="sm">
-              View Public Listings
-            </Button>
-          </Link>
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <ShieldAlert className="w-5 h-5 text-rose-600" />
+              Open Incidents & Condition Diff Reviews (Step 9)
+            </h2>
+            <p className="text-xs text-slate-500">
+              Condition degradation flagged by algorithm. Awaiting human technician inspection and sign-off.
+            </p>
+          </div>
+          <Badge variant="destructive">{openIncidents.length} Draft Incidents</Badge>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {assignedResources.map((res) => (
-            <Card key={res.id} className="border-slate-200 shadow-sm flex flex-col justify-between">
-              <div>
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-wider mb-2">
-                      {res.category.replace("_", " ")}
-                    </Badge>
-                    <Badge variant={res.requires_supervision ? "warning" : "secondary"} className="text-[10px]">
-                      {res.requires_supervision ? "Supervision Required" : "Self-Service Cert"}
-                    </Badge>
-                  </div>
-                  <CardTitle className="text-base leading-snug">{res.name}</CardTitle>
-                  <CardDescription className="text-xs text-slate-500 mt-1">
-                    {res.location}
-                  </CardDescription>
-                </CardHeader>
-
-                <CardContent className="space-y-3 text-xs text-slate-700">
-                  <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200 space-y-1">
-                    <span className="font-semibold text-slate-900 block">Operating Rules:</span>
-                    <p className="text-slate-600 leading-relaxed">{res.rules}</p>
-                  </div>
-
-                  <div className="flex items-center justify-between text-slate-600 pt-1">
-                    <span>Advance Notice: {res.min_lead_time_hours}h</span>
-                    <span>Max Session: {res.max_duration_hours}h</span>
-                  </div>
-                </CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {openIncidents.map((inc) => (
+            <div
+              key={inc.id}
+              className="p-5 rounded-2xl border-2 border-amber-300 bg-amber-50/50 shadow-sm space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <Badge variant="warning" className="text-[10px] uppercase font-bold bg-amber-200 text-amber-950">
+                  Status: {inc.status} • Severity: {inc.severity}
+                </Badge>
+                <span className="text-[10px] font-mono text-slate-400">ID: {inc.id}</span>
               </div>
 
-              <div className="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs">
-                <span className="text-emerald-700 font-medium flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Ready for Handover
-                </span>
-                <span className="text-slate-500 font-mono text-[11px]">ID: {res.id.slice(0, 8)}</span>
+              <p className="text-xs text-slate-800 leading-relaxed font-semibold">
+                {inc.description}
+              </p>
+
+              <div className="text-[11px] text-amber-900 bg-white/80 p-2.5 rounded-lg border border-amber-200">
+                <strong>Zero Automated Penalties:</strong> Technician reviews physical equipment before assessing repair fees or waivers.
               </div>
-            </Card>
+
+              <div className="pt-2 flex items-center justify-between text-xs border-t border-amber-200/60">
+                <span className="text-slate-500 font-mono">Booking: #{inc.booking_id}</span>
+                <Link
+                  href={`/bookings/${inc.booking_id}`}
+                  className="text-indigo-600 font-bold hover:underline flex items-center gap-1"
+                >
+                  Inspect Diff & Details <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Equipment Utilisation Cards */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+            <Percent className="w-5 h-5 text-indigo-600" />
+            Station Capacity & Utilisation
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {utilizations.map(({ resource, percentage, label }) => (
+            <div key={resource.id} className="p-4 rounded-xl border border-slate-200 bg-white shadow-sm space-y-2.5">
+              <div className="flex items-center justify-between">
+                <Badge variant="outline" className="text-[9px] uppercase font-bold">
+                  {resource.category.replace("_", " ")}
+                </Badge>
+                <span className="font-extrabold text-sm text-slate-900">{percentage}%</span>
+              </div>
+              <h4 className="font-bold text-sm text-slate-900 truncate">{resource.name}</h4>
+
+              <div className="space-y-1">
+                <div className="h-2 w-full rounded-full bg-slate-100 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full ${
+                      percentage >= 80 ? "bg-rose-500" : percentage >= 50 ? "bg-amber-500" : "bg-emerald-500"
+                    }`}
+                    style={{ width: `${percentage}%` }}
+                  />
+                </div>
+                <span className="text-[10px] text-slate-500 block">{label}</span>
+              </div>
+            </div>
           ))}
         </div>
       </div>

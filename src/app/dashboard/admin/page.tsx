@@ -1,6 +1,7 @@
 import { requireRole } from "@/lib/auth/role-guard";
 import { SEED_USERS, SEED_RESOURCES, SEED_CREDENTIALS } from "@/lib/data/seed-data";
-import { verifyAuditChain, computeAuditHash } from "@/lib/rules/audit-verifier";
+import { getAuditLogs, getCredentials, getAllBookings, getIncidents } from "@/lib/data/store";
+import { verifyAuditChain } from "@/lib/rules/audit-verifier";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -9,9 +10,11 @@ import {
   Layers,
   FileCheck,
   CheckCircle2,
-  AlertOctagon,
-  Sparkles,
   Lock,
+  ArrowRight,
+  Hash,
+  Clock,
+  ClipboardList,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -19,26 +22,16 @@ import { Button } from "@/components/ui/button";
 export default async function AdminDashboard() {
   const user = await requireRole(["admin"]);
 
-  // Build a test audit chain to run verification test live
-  const sampleGenesis = {
-    id: "30000000-0000-0000-0000-000000000001",
-    actor_id: user.id,
-    actor_role: "admin",
-    action: "SYSTEM_INITIALIZED",
-    resource_type: "system",
-    resource_id: "seed-v1",
-    previous_state: null,
-    new_state: { seeded_users: SEED_USERS.length, seeded_resources: SEED_RESOURCES.length },
-    reason: "Initial system seeding and cryptographic audit chain bootstrap.",
-    ip_address: "127.0.0.1",
-    user_agent: "CampusShare-Verification-Agent/1.0",
-    prev_hash: "GENESIS_HASH",
-    hash: "",
-    created_at: "2026-10-28T12:00:00Z",
-  };
-  sampleGenesis.hash = computeAuditHash("GENESIS_HASH", sampleGenesis);
+  const allLogs = getAuditLogs();
+  const allCreds = await getCredentials();
+  const allBookings = await getAllBookings();
+  const allIncidents = await getIncidents();
 
-  const chainResult = verifyAuditChain([sampleGenesis]);
+  // Verification Queue (pending credentials)
+  const pendingCredentials = allCreds.filter((c) => c.status === "pending");
+
+  // Audit chain verification check
+  const chainResult = verifyAuditChain(allLogs);
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 space-y-8">
@@ -53,7 +46,7 @@ export default async function AdminDashboard() {
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-bold">{user.full_name}</h1>
                 <Badge variant="destructive" className="uppercase text-xs font-bold border-0">
-                  Campus Administrator
+                  Campus Administrator Desk
                 </Badge>
               </div>
               <p className="text-slate-300 text-sm mt-1">
@@ -63,6 +56,11 @@ export default async function AdminDashboard() {
           </div>
 
           <div className="flex items-center gap-2">
+            <Link href="/judge">
+              <Button size="sm" variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/20 text-xs">
+                Judge Script
+              </Button>
+            </Link>
             <Badge variant="success" className="px-3 py-1 font-semibold text-xs">
               Platform Status: Healthy
             </Badge>
@@ -87,27 +85,27 @@ export default async function AdminDashboard() {
 
         <Card className="border-slate-200">
           <CardHeader className="pb-2">
-            <CardDescription className="text-xs font-semibold uppercase">Listed Resources</CardDescription>
+            <CardDescription className="text-xs font-semibold uppercase">Active Reservations</CardDescription>
             <CardTitle className="text-2xl font-bold flex items-center justify-between">
-              <span>{SEED_RESOURCES.length}</span>
+              <span>{allBookings.length}</span>
               <Layers className="w-5 h-5 text-indigo-600" />
             </CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-slate-500">
-            Across 4 categories (Labs, Fab, Media, Elec)
+            Across 8 campus resources
           </CardContent>
         </Card>
 
         <Card className="border-slate-200">
           <CardHeader className="pb-2">
-            <CardDescription className="text-xs font-semibold uppercase">Tracked Credentials</CardDescription>
-            <CardTitle className="text-2xl font-bold flex items-center justify-between">
-              <span>{SEED_CREDENTIALS.length}</span>
-              <FileCheck className="w-5 h-5 text-indigo-600" />
+            <CardDescription className="text-xs font-semibold uppercase">Pending Qualifications</CardDescription>
+            <CardTitle className="text-2xl font-bold flex items-center justify-between text-amber-600">
+              <span>{pendingCredentials.length}</span>
+              <FileCheck className="w-5 h-5 text-amber-600" />
             </CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-slate-500">
-            Active, Expired, Pending & Revoked states
+            Awaiting verification sign-off
           </CardContent>
         </Card>
 
@@ -115,34 +113,121 @@ export default async function AdminDashboard() {
           <CardHeader className="pb-2">
             <CardDescription className="text-xs font-semibold uppercase">Audit Chain Security</CardDescription>
             <CardTitle className="text-2xl font-bold flex items-center justify-between text-emerald-600">
-              <span>100% Tamper-Proof</span>
+              <span>{chainResult.isValid ? "100% Valid" : "Tampered"}</span>
               <Lock className="w-5 h-5 text-emerald-600" />
             </CardTitle>
           </CardHeader>
           <CardContent className="text-xs text-emerald-700">
-            SHA-256 Chained Hash Valid
+            SHA-256 Chained Hash Verified
           </CardContent>
         </Card>
       </div>
 
-      {/* Audit Log Health Check Box */}
-      <Card className="border-emerald-200 bg-emerald-50/40">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2 text-emerald-950">
-            <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-            Cryptographic Audit Log Verification Result
-          </CardTitle>
-          <CardDescription className="text-xs text-emerald-800">
-            Verified by pure TypeScript verification module at <code className="font-mono bg-white px-1.5 py-0.5 rounded border border-emerald-300">/lib/rules/audit-verifier.ts</code>
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2 text-xs text-slate-700">
-          <div className="bg-white p-3 rounded-lg border border-emerald-200 font-mono text-[11px] space-y-1">
-            <div className="text-slate-500">// Chain verification check:</div>
-            <div>Status: <span className="text-emerald-700 font-bold">{chainResult.isValid ? "VERIFIED (OK)" : "TAMPERED"}</span></div>
-            <div>Message: {chainResult.message}</div>
-            <div>Genesis Hash: <span className="text-slate-600 break-all">{sampleGenesis.hash}</span></div>
+      {/* Verification Queue Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <FileCheck className="w-5 h-5 text-indigo-600" />
+              Qualification Verification Queue
+            </h2>
+            <p className="text-xs text-slate-500">
+              User licenses and safety training submissions requiring staff verification.
+            </p>
           </div>
+          <Link href="/credentials/verify">
+            <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs gap-1">
+              Open Full Verification Desk <ArrowRight className="w-3.5 h-3.5" />
+            </Button>
+          </Link>
+        </div>
+
+        {pendingCredentials.length === 0 ? (
+          <div className="p-6 text-center text-xs text-slate-500 bg-slate-50 rounded-xl border border-slate-200">
+            Verification queue is clear. All submitted qualifications have been reviewed.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {pendingCredentials.map((cred) => (
+              <div
+                key={cred.id}
+                className="p-4 rounded-xl border border-amber-200 bg-amber-50/50 flex items-center justify-between gap-3 shadow-sm"
+              >
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="warning" className="text-[9px] uppercase font-bold">
+                      Pending Review
+                    </Badge>
+                    <span className="text-[10px] font-mono text-slate-500">#{cred.id.slice(0, 8)}</span>
+                  </div>
+                  <h4 className="font-bold text-sm text-slate-900">{cred.title}</h4>
+                  <p className="text-xs text-slate-600">Type: {cred.credential_type}</p>
+                </div>
+
+                <Link href="/credentials/verify">
+                  <Button size="sm" className="h-8 text-xs bg-indigo-600 hover:bg-indigo-700 text-white">
+                    Review
+                  </Button>
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Cryptographic Audit Trail Section (Step 10) */}
+      <Card className="border-slate-200 shadow-sm">
+        <CardHeader className="pb-3 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <ClipboardList className="w-5 h-5 text-indigo-600" />
+              Cryptographic Audit Log & SHA-256 Integrity (Step 10)
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Every sensitive handover, condition record, review decision, and incident writes to this tamper-evident hash chain.
+            </CardDescription>
+          </div>
+
+          <Badge variant={chainResult.isValid ? "success" : "destructive"} className="text-xs self-start sm:self-auto gap-1">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            Chain Status: {chainResult.isValid ? "VERIFIED (OK)" : "TAMPERED"}
+          </Badge>
+        </CardHeader>
+
+        <CardContent className="p-4 space-y-3">
+          {allLogs.length === 0 ? (
+            <div className="p-6 text-center text-xs text-slate-500 bg-slate-50 rounded-xl">
+              Audit log will display entries as check-ins, returns, and reviews occur.
+            </div>
+          ) : (
+            <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
+              {allLogs.slice(0, 10).map((log) => (
+                <div
+                  key={log.id}
+                  className="p-3 rounded-xl border border-slate-200 bg-slate-50 text-xs space-y-1.5"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="font-mono text-[10px] font-bold">
+                        {log.action}
+                      </Badge>
+                      <span className="text-slate-600">Actor: {log.actor_role}</span>
+                    </div>
+                    <span className="text-[11px] text-slate-400 font-mono">
+                      {new Date(log.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                    </span>
+                  </div>
+
+                  <p className="text-slate-800 font-medium">{log.reason}</p>
+
+                  <div className="flex items-center gap-2 text-[10px] font-mono text-slate-500 pt-1 border-t border-slate-200">
+                    <Hash className="w-3 h-3 text-slate-400 shrink-0" />
+                    <span className="truncate">Hash: {log.hash}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -211,4 +296,3 @@ export default async function AdminDashboard() {
     </div>
   );
 }
-

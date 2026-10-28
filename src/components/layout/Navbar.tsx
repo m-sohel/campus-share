@@ -15,8 +15,10 @@ import {
   Compass,
   Building2,
   ClipboardCheck,
+  Award,
 } from "lucide-react";
 import { useState } from "react";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 interface NavbarProps {
   currentUser: Profile | null;
@@ -196,8 +198,17 @@ export function Navbar({ currentUser }: NavbarProps) {
         </div>
 
         <div className="flex items-center gap-3">
+          <Link
+            href="/judge"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-900 hover:bg-amber-200 border border-amber-300 transition shadow-xs"
+          >
+            <Award className="w-3.5 h-3.5 text-amber-700" />
+            <span>Judge Script</span>
+          </Link>
+
           {currentUser ? (
             <div className="flex items-center gap-2">
+              <NotificationBell />
               <Button
                 variant="outline"
                 size="sm"
