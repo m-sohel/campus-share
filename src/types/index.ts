@@ -57,6 +57,7 @@ export interface Resource {
   location: string;
   institution: "university" | "makerspace";
   rules: string;
+  safety_notes?: string;
   requires_supervision: boolean;
   min_lead_time_hours: number;
   max_duration_hours: number;
@@ -64,6 +65,10 @@ export interface Resource {
   deposit_required_cents: number;
   status: ResourceStatus;
   image_url?: string | null;
+  condition_checklist?: string[];
+  requirements?: ResourceRequirement[];
+  availability_slots?: AvailabilitySlot[];
+  blackout_dates?: BlackoutDate[];
   created_at: string;
   updated_at: string;
 }

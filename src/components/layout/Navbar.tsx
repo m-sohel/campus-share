@@ -136,6 +136,45 @@ export function Navbar({ currentUser }: NavbarProps) {
                     Dashboard
                   </span>
                 </Link>
+
+                {(currentUser.role === "owner" || currentUser.role === "admin") && (
+                  <Link
+                    href="/resources/new"
+                    className={`px-3 py-2 text-sm font-medium rounded-md transition ${
+                      pathname === "/resources/new"
+                        ? "bg-indigo-50 text-indigo-700 font-semibold"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                    }`}
+                  >
+                    + List Resource
+                  </Link>
+                )}
+
+                {(currentUser.role === "owner" || currentUser.role === "manager" || currentUser.role === "admin") && (
+                  <Link
+                    href="/credentials/verify"
+                    className={`px-3 py-2 text-sm font-medium rounded-md transition ${
+                      pathname === "/credentials/verify"
+                        ? "bg-indigo-50 text-indigo-700 font-semibold"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                    }`}
+                  >
+                    Verify Queue
+                  </Link>
+                )}
+
+                {currentUser.role === "user" && (
+                  <Link
+                    href="/credentials/request"
+                    className={`px-3 py-2 text-sm font-medium rounded-md transition ${
+                      pathname === "/credentials/request"
+                        ? "bg-indigo-50 text-indigo-700 font-semibold"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                    }`}
+                  >
+                    Get Certified
+                  </Link>
+                )}
               </>
             )}
           </nav>

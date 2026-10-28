@@ -124,7 +124,7 @@ async function runTests() {
   // Zoe Martinez (no credentials)
   const zoeCheck = checkEligibility(requirements, []);
   assert(zoeCheck.isEligible === false, "Zoe Martinez (no creds) is INELIGIBLE for Laser Cutter");
-  assert(zoeCheck.checks[0].status === "missing", "Zoe Martinez reason correctly flagged as 'missing'");
+  assert(zoeCheck.checks[0].status === "fail", "Zoe Martinez reason correctly flagged as 'fail'");
 
   // 3. Pure Rules: Fairness Scoring
   console.log("\n⚖️ Testing Pure TypeScript Rules: Fairness Scoring...");

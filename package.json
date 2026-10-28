@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx scripts/seed.ts",
+    "test": "tsx scripts/test-eligibility.ts && tsx scripts/test-stage2-e2e.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
