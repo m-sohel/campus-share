@@ -32,6 +32,7 @@ export function AuditLogViewer({ initialEntries, actors }: AuditLogViewerProps) 
   const [selectedActor, setSelectedActor] = useState<string>("ALL");
   const [selectedAction, setSelectedAction] = useState<string>("ALL");
   const [selectedEntity, setSelectedEntity] = useState<string>("ALL");
+  const [selectedDate, setSelectedDate] = useState<string>("");
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
 
   // Verification State
@@ -43,6 +44,10 @@ export function AuditLogViewer({ initialEntries, actors }: AuditLogViewerProps) 
     if (selectedActor !== "ALL" && e.actor_id !== selectedActor) return false;
     if (selectedAction !== "ALL" && e.action !== selectedAction) return false;
     if (selectedEntity !== "ALL" && e.resource_type !== selectedEntity) return false;
+    if (selectedDate) {
+      const entryDate = new Date(e.created_at).toISOString().split("T")[0];
+      if (entryDate !== selectedDate) return false;
+    }
     return true;
   });
 
@@ -157,7 +162,7 @@ export function AuditLogViewer({ initialEntries, actors }: AuditLogViewerProps) 
         )}
 
         {/* Filter Controls Bar */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-4 text-xs">
           <div>
             <label className="block text-[11px] font-semibold text-slate-400 mb-1">
               Filter by Actor
@@ -210,6 +215,29 @@ export function AuditLogViewer({ initialEntries, actors }: AuditLogViewerProps) 
                 </option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-[11px] font-semibold text-slate-400">
+                Filter by Date
+              </label>
+              {selectedDate && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedDate("")}
+                  className="text-[10px] text-indigo-400 hover:text-indigo-300 underline"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+            />
           </div>
         </div>
       </CardHeader>
@@ -335,3 +363,4 @@ export function AuditLogViewer({ initialEntries, actors }: AuditLogViewerProps) 
     </Card>
   );
 }
+
