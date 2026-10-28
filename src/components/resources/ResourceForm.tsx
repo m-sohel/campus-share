@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Resource, ResourceCategory, ResourceRequirement } from "@/types";
+import { Resource, ResourceCategory } from "@/types";
 import { ListingCompleteness } from "./ListingCompleteness";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,9 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import {
   Layers,
-  MapPin,
   ShieldAlert,
-  Clock,
   Plus,
   Trash2,
   Image as ImageIcon,

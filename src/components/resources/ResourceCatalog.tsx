@@ -17,9 +17,7 @@ import {
   Sparkles,
   ArrowRight,
   ShieldCheck,
-  Building2,
   MapPin,
-  Calendar,
 } from "lucide-react";
 
 interface ResourceCatalogProps {
