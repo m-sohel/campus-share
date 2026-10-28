@@ -186,6 +186,19 @@ export function NotificationBell({ initialCount = 0 }: NotificationBellProps) {
                       {n.message}
                     </p>
 
+                    {n.action_label && n.action_url && (
+                      <div className="pt-1">
+                        <Link
+                          href={n.action_url}
+                          onClick={() => setIsOpen(false)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px] shadow-xs"
+                        >
+                          <ShieldAlert className="w-3 h-3" />
+                          {n.action_label}
+                        </Link>
+                      </div>
+                    )}
+
                     <div className="flex items-center justify-between pt-1">
                       <span className="text-[10px] text-slate-400 font-mono">
                         {new Date(n.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}

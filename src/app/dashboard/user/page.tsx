@@ -1,5 +1,5 @@
 import { requireRole } from "@/lib/auth/role-guard";
-import { getAllBookings, getNotifications, getCredentials, getAllResources } from "@/lib/data/store";
+import { getAllBookings, getNotifications, getCredentials, getAllResources, getIncidents } from "@/lib/data/store";
 import { checkEligibility } from "@/lib/rules/eligibility";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,7 @@ import {
   Bell,
   Calendar,
   History,
+  ShieldAlert,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,10 @@ export default async function UserDashboard() {
   // Notifications
   const notifications = await getNotifications(user.id);
   const unreadCount = notifications.filter((n) => !n.is_read).length;
+
+  // Incidents involving this user
+  const allIncidents = await getIncidents();
+  const userIncidents = allIncidents.filter((i) => i.affected_user_id === user.id);
 
   // Run eligibility checks on all resources
   const eligibilitySummaries = allResources.map((res) => {
@@ -242,6 +247,56 @@ export default async function UserDashboard() {
           </div>
         )}
       </div>
+
+      {/* Active Incidents & Inquiries (Step 9 Due Process) */}
+      {userIncidents.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
+              <ShieldAlert className="w-4 h-4 text-rose-600" />
+              Incidents &amp; Variance Inquiries Requiring Response
+            </h3>
+            <Badge variant="destructive">{userIncidents.length} Pending Due Process</Badge>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {userIncidents.map((inc) => (
+              <div
+                key={inc.id}
+                className="p-5 rounded-2xl border-2 border-rose-300 bg-rose-50/40 shadow-sm space-y-3 flex flex-col justify-between"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Badge variant="destructive" className="text-[10px] uppercase font-bold">
+                      Status: {inc.status} • {inc.severity}
+                    </Badge>
+                    <span className="text-[10px] font-mono text-slate-400">#{inc.id}</span>
+                  </div>
+
+                  <h4 className="font-bold text-sm text-slate-900">{inc.title || `${inc.type.toUpperCase()} Report`}</h4>
+                  <p className="text-xs text-slate-700 bg-white/80 p-2.5 rounded-lg border border-rose-200 leading-relaxed">
+                    {inc.description}
+                  </p>
+
+                  <div className="text-[11px] text-rose-800 bg-rose-100/60 p-2 rounded border border-rose-200">
+                    <strong>Due Process Guaranteed:</strong> You may submit your factual statement and physical photos before any manager finding is made.
+                  </div>
+                </div>
+
+                <div className="pt-2 flex items-center justify-between border-t border-rose-200">
+                  <span className="text-[11px] text-slate-500 font-mono">Booking: #{inc.booking_id}</span>
+                  <Link href={`/incidents/${inc.id}`}>
+                    <Button size="sm" className="h-8 text-xs bg-rose-600 hover:bg-rose-700 text-white font-bold gap-1">
+                      <ShieldAlert className="w-3.5 h-3.5" />
+                      View Due Process &amp; Respond
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Requests Queue & Status */}
       {pendingRequests.length > 0 && (

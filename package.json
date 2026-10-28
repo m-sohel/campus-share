@@ -8,10 +8,11 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "tsx scripts/seed.ts",
-    "test": "tsx scripts/test-eligibility.ts && tsx scripts/test-stage2-e2e.ts && tsx scripts/test-condition.ts && tsx scripts/test-stage4-e2e.ts && tsx scripts/test-stage6-e2e.ts",
+    "test": "tsx scripts/test-eligibility.ts && tsx scripts/test-stage2-e2e.ts && tsx scripts/test-condition.ts && tsx scripts/test-stage4-e2e.ts && tsx scripts/test-stage6-e2e.ts && tsx scripts/test-incidents.ts && tsx scripts/test-clock.ts && tsx scripts/test-stage8-e2e.ts",
     "test:condition": "tsx scripts/test-condition.ts",
     "test:stage4": "tsx scripts/test-stage4-e2e.ts",
-    "test:stage6": "tsx scripts/test-stage6-e2e.ts"
+    "test:stage6": "tsx scripts/test-stage6-e2e.ts",
+    "test:stage8": "tsx scripts/test-stage8-e2e.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

@@ -25,13 +25,41 @@ export type ConditionStage = "check_in" | "return";
 
 export type ConditionGrade = "pristine" | "minor_wear" | "damaged" | "dirty" | "missing_parts";
 
-export type IncidentType = "damage" | "late_return" | "safety_violation" | "missing_item" | "conflict" | "misuse";
+export type IncidentType =
+  | "damage"
+  | "late_return"
+  | "no_show"
+  | "misuse"
+  | "safety"
+  | "safety_violation"
+  | "missing_item"
+  | "conflict";
 
 export type IncidentSeverity = "low" | "medium" | "high" | "critical";
 
-export type IncidentStatus = "draft" | "reported" | "under_review" | "resolved" | "escalated";
+export type IncidentStatus =
+  | "draft"
+  | "open"
+  | "under_review"
+  | "resolved"
+  | "disputed"
+  | "reported"
+  | "escalated";
 
 export type NotificationType = "info" | "action_required" | "warning" | "success";
+
+export type NotificationCategory =
+  | "request_received"
+  | "approved"
+  | "rejected"
+  | "waitlisted"
+  | "slot_offered"
+  | "reminder_before_booking"
+  | "return_due"
+  | "overdue"
+  | "incident_opened"
+  | "cancellation"
+  | "general";
 
 export type WaitlistStatus = "waiting" | "offered" | "expired" | "fulfilled" | "cancelled";
 
@@ -160,19 +188,73 @@ export interface ConditionRecord {
   created_at: string;
 }
 
+export interface IncidentTimelineEvent {
+  id: string;
+  incident_id: string;
+  actor_id: string;
+  actor_name: string;
+  actor_role: UserRole;
+  action:
+    | "draft_created"
+    | "incident_opened"
+    | "user_responded"
+    | "manager_decided"
+    | "dispute_raised"
+    | "admin_resolved";
+  notes: string;
+  timestamp: string;
+}
+
 export interface Incident {
   id: string;
   booking_id: string;
   reporter_id: string;
+  reporter_name?: string;
+  affected_user_id?: string;
+  affected_user_name?: string;
+  resource_id?: string;
+  resource_name?: string;
   type: IncidentType;
   severity: IncidentSeverity;
   status: IncidentStatus;
+  title?: string;
   description: string;
-  resolution_notes?: string | null;
-  resolved_by?: string | null;
+  evidence_text?: string | null;
+  evidence_url?: string | null;
+  // User response
+  user_response?: string | null;
+  user_response_at?: string | null;
+  // Manager decision
+  manager_decision?:
+    | "fault_user"
+    | "fault_equipment"
+    | "no_fault_wear_and_tear"
+    | "warning_issued"
+    | "cost_share"
+    | "dismissed"
+    | null;
+  manager_notes?: string | null;
+  decided_by?: string | null;
+  decided_at?: string | null;
   penalty_applied?: string | null;
-  created_at: string;
+  // User dispute
+  dispute_reason?: string | null;
+  disputed_at?: string | null;
+  // Admin final resolution
+  admin_resolution?:
+    | "upheld"
+    | "overturned"
+    | "compromise"
+    | "dismissed"
+    | null;
+  admin_notes?: string | null;
+  resolved_by?: string | null;
   resolved_at?: string | null;
+  resolution_notes?: string | null;
+  // Visual timeline
+  timeline?: IncidentTimelineEvent[];
+  created_at: string;
+  updated_at?: string;
 }
 
 export interface Notification {
@@ -181,8 +263,11 @@ export interface Notification {
   title: string;
   message: string;
   type: NotificationType;
+  category?: NotificationCategory;
   is_read: boolean;
   link?: string | null;
+  action_label?: string | null;
+  action_url?: string | null;
   created_at: string;
 }
 

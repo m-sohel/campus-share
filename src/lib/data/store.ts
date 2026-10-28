@@ -8,6 +8,10 @@ import {
   UserRole,
   ConditionRecord,
   Incident,
+  IncidentType,
+  IncidentSeverity,
+  IncidentStatus,
+  IncidentTimelineEvent,
   Profile,
   Notification,
 } from "@/types";
@@ -16,6 +20,17 @@ import { createClientServer } from "@/lib/supabase/server";
 import { computeAuditHash } from "@/lib/rules/audit-verifier";
 import { calculateListingCompleteness } from "@/lib/rules/completeness";
 import { computeConditionDiff, checkLateReturn, ChecklistItemRecord } from "@/lib/rules/condition";
+import {
+  canTransitionIncident,
+  getManagerDecisionLabel,
+  getAdminResolutionLabel,
+} from "@/lib/rules/incidents";
+import {
+  getAppTime,
+  resetAppClock,
+  detectTimeTriggerEvents,
+  TriggeredTimeEvent,
+} from "@/lib/rules/clock";
 
 export { calculateListingCompleteness };
 
@@ -560,12 +575,33 @@ let runtimeIncidents: Incident[] = [
   {
     id: "inc-seed-drone-01",
     booking_id: "b-flagged-incident-drone",
-    reporter_id: "00000000-0000-0000-0000-000000000004", // Jordan Taylor
+    reporter_id: "00000000-0000-0000-0000-000000000004", // Jordan Taylor (Technician)
+    reporter_name: "Jordan Taylor",
+    affected_user_id: "00000000-0000-0000-0000-000000000010", // Lucas Wright
+    affected_user_name: "Lucas Wright",
+    resource_id: "res-drone-matrice",
+    resource_name: "DJI Matrice 350 RTK Inspection Drone Kit",
     type: "damage",
     severity: "medium",
-    status: "draft", // In draft for review
+    status: "draft", // In draft for manager review
+    title: "Post-flight motor mount hairline crack",
     description: "Post-flight motor mount hairline crack observed during return inspection. Awaiting technician sign-off.",
+    evidence_text: "Visual inspection revealed 1.2cm stress fracture along rear-left arm carbon assembly after field flight test.",
+    evidence_url: "https://images.unsplash.com/photo-1527977966376-1c8408f9f108?w=800&auto=format&fit=crop&q=80",
+    timeline: [
+      {
+        id: "evt-draft-01",
+        incident_id: "inc-seed-drone-01",
+        actor_id: "00000000-0000-0000-0000-000000000004",
+        actor_name: "Jordan Taylor",
+        actor_role: "manager",
+        action: "draft_created",
+        notes: "Auto-drafted by condition diff engine following physical return inspection. Awaiting technician sign-off.",
+        timestamp: new Date(now - 12 * oneHour).toISOString(),
+      },
+    ],
     created_at: new Date(now - 12 * oneHour).toISOString(),
+    updated_at: new Date(now - 12 * oneHour).toISOString(),
   },
 ];
 
@@ -879,10 +915,517 @@ export async function saveConditionRecord(record: {
 }
 
 /**
- * Retrieves all incidents.
+ * Retrieves all incidents, optionally filtered.
  */
-export async function getIncidents(): Promise<Incident[]> {
-  return runtimeIncidents;
+export async function getIncidents(filter?: {
+  bookingId?: string;
+  status?: IncidentStatus;
+  userId?: string;
+}): Promise<Incident[]> {
+  let list = runtimeIncidents;
+  if (filter?.bookingId) {
+    list = list.filter((i) => i.booking_id === filter.bookingId);
+  }
+  if (filter?.status) {
+    list = list.filter((i) => i.status === filter.status);
+  }
+  if (filter?.userId) {
+    list = list.filter(
+      (i) => i.affected_user_id === filter.userId || i.reporter_id === filter.userId
+    );
+  }
+  return list;
+}
+
+/**
+ * Retrieves a single incident by ID.
+ */
+export async function getIncidentById(id: string): Promise<Incident | null> {
+  const inc = runtimeIncidents.find((i) => i.id === id);
+  return inc ? { ...inc } : null;
+}
+
+/**
+ * Creates a new incident report (by user, owner, or condition engine).
+ */
+export async function createIncident(data: {
+  booking_id: string;
+  reporter_id: string;
+  type: IncidentType;
+  severity: IncidentSeverity;
+  title?: string;
+  description: string;
+  evidence_text?: string;
+  evidence_url?: string;
+  status?: IncidentStatus;
+}): Promise<Incident> {
+  const booking = await getBookingById(data.booking_id);
+  const reporter = getUserById(data.reporter_id);
+  const resource = booking ? await getResourceById(booking.resource_id) : null;
+  const affectedUser = booking ? getUserById(booking.user_id) : null;
+
+  const id = `inc-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  const status: IncidentStatus = data.status || "open";
+  const nowStr = getAppTime().toISOString();
+
+  const title =
+    data.title ||
+    `${data.type.replace("_", " ").toUpperCase()}: ${resource ? resource.name : "Equipment Issue"}`;
+
+  const newIncident: Incident = {
+    id,
+    booking_id: data.booking_id,
+    reporter_id: data.reporter_id,
+    reporter_name: reporter ? reporter.full_name : "Station Technician",
+    affected_user_id: affectedUser ? affectedUser.id : booking?.user_id,
+    affected_user_name: affectedUser ? affectedUser.full_name : "Borrower",
+    resource_id: resource?.id,
+    resource_name: resource?.name,
+    type: data.type,
+    severity: data.severity,
+    status,
+    title,
+    description: data.description,
+    evidence_text: data.evidence_text || null,
+    evidence_url: data.evidence_url || null,
+    timeline: [
+      {
+        id: `evt-${Date.now()}-1`,
+        incident_id: id,
+        actor_id: data.reporter_id,
+        actor_name: reporter ? reporter.full_name : "Reporter",
+        actor_role: reporter ? reporter.role : "manager",
+        action: status === "draft" ? "draft_created" : "incident_opened",
+        notes: data.description,
+        timestamp: nowStr,
+      },
+    ],
+    created_at: nowStr,
+    updated_at: nowStr,
+  };
+
+  runtimeIncidents.unshift(newIncident);
+
+  await logAuditEvent({
+    actor_id: data.reporter_id,
+    actor_role: reporter ? reporter.role : "user",
+    action: status === "draft" ? "INCIDENT_DRAFTED" : ("INCIDENT_REPORTED" as any),
+    resource_type: "incident",
+    resource_id: id,
+    new_state: {
+      type: data.type,
+      severity: data.severity,
+      status,
+      title,
+    },
+    reason: `Incident ${status === "draft" ? "auto-drafted" : "reported"}: "${data.description}"`,
+  });
+
+  // If opened directly, notify the affected borrower
+  if (status === "open" && affectedUser) {
+    await createNotification({
+      user_id: affectedUser.id,
+      title: `⚠️ Incident Opened: ${title}`,
+      message: `An incident regarding reservation #${data.booking_id} has been opened for investigation. Please review the details and submit your response statement.`,
+      type: "action_required",
+      category: "incident_opened",
+      link: `/incidents/${id}`,
+    });
+  }
+
+  return newIncident;
+}
+
+/**
+ * Opens a draft incident for formal review (Manager/Owner/Admin).
+ */
+export async function openDraftIncident(params: {
+  incidentId: string;
+  managerId: string;
+  notes?: string;
+}): Promise<Incident> {
+  const inc = runtimeIncidents.find((i) => i.id === params.incidentId);
+  if (!inc) throw new Error("Incident not found");
+
+  const manager = getUserById(params.managerId);
+  const nowStr = getAppTime().toISOString();
+  const prevStatus = inc.status;
+
+  inc.status = "open";
+  inc.updated_at = nowStr;
+
+  inc.timeline = inc.timeline || [];
+  inc.timeline.push({
+    id: `evt-${Date.now()}`,
+    incident_id: inc.id,
+    actor_id: params.managerId,
+    actor_name: manager ? manager.full_name : "Station Manager",
+    actor_role: manager ? manager.role : "manager",
+    action: "incident_opened",
+    notes: params.notes || "Draft incident formally opened for borrower response and physical review.",
+    timestamp: nowStr,
+  });
+
+  await logAuditEvent({
+    actor_id: params.managerId,
+    actor_role: manager ? manager.role : "manager",
+    action: "INCIDENT_OPENED" as any,
+    resource_type: "incident",
+    resource_id: inc.id,
+    previous_state: { status: prevStatus },
+    new_state: { status: "open" },
+    reason: params.notes || "Opened draft incident for formal investigation.",
+  });
+
+  if (inc.affected_user_id) {
+    await createNotification({
+      user_id: inc.affected_user_id,
+      title: `⚠️ Incident Opened for Review`,
+      message: `Incident #${inc.id} regarding your reservation has been opened. Please submit your statement and explanation.`,
+      type: "action_required",
+      category: "incident_opened",
+      link: `/incidents/${inc.id}`,
+    });
+  }
+
+  return { ...inc };
+}
+
+/**
+ * Borrower responds to an incident with their formal statement.
+ */
+export async function respondToIncident(params: {
+  incidentId: string;
+  userId: string;
+  statement: string;
+  evidenceUrl?: string;
+}): Promise<Incident> {
+  const inc = runtimeIncidents.find((i) => i.id === params.incidentId);
+  if (!inc) throw new Error("Incident not found");
+
+  const user = getUserById(params.userId);
+  const nowStr = getAppTime().toISOString();
+
+  inc.user_response = params.statement;
+  inc.user_response_at = nowStr;
+  if (params.evidenceUrl) inc.evidence_url = params.evidenceUrl;
+  inc.status = "under_review";
+  inc.updated_at = nowStr;
+
+  inc.timeline = inc.timeline || [];
+  inc.timeline.push({
+    id: `evt-${Date.now()}`,
+    incident_id: inc.id,
+    actor_id: params.userId,
+    actor_name: user ? user.full_name : "Borrower",
+    actor_role: user ? user.role : "user",
+    action: "user_responded",
+    notes: params.statement,
+    timestamp: nowStr,
+  });
+
+  await logAuditEvent({
+    actor_id: params.userId,
+    actor_role: user ? user.role : "user",
+    action: "INCIDENT_USER_RESPONDED" as any,
+    resource_type: "incident",
+    resource_id: inc.id,
+    previous_state: { status: "open" },
+    new_state: { status: "under_review", statement: params.statement },
+    reason: `Borrower submitted statement: "${params.statement.slice(0, 80)}..."`,
+  });
+
+  // Notify station manager
+  if (inc.reporter_id) {
+    await createNotification({
+      user_id: inc.reporter_id,
+      title: `📝 Borrower Statement Submitted`,
+      message: `${user?.full_name || "Borrower"} responded to Incident #${inc.id}. Ready for manager decision.`,
+      type: "action_required",
+      category: "action_required" as any,
+      link: `/incidents/${inc.id}`,
+    });
+  }
+
+  return { ...inc };
+}
+
+/**
+ * Manager records a formal decision on an incident.
+ */
+export async function decideIncident(params: {
+  incidentId: string;
+  managerId: string;
+  decision: "fault_user" | "fault_equipment" | "no_fault_wear_and_tear" | "warning_issued" | "cost_share" | "dismissed";
+  notes: string;
+  penaltyApplied?: string;
+}): Promise<Incident> {
+  const inc = runtimeIncidents.find((i) => i.id === params.incidentId);
+  if (!inc) throw new Error("Incident not found");
+
+  const manager = getUserById(params.managerId);
+  const nowStr = getAppTime().toISOString();
+  const decisionInfo = getManagerDecisionLabel(params.decision);
+
+  inc.manager_decision = params.decision;
+  inc.manager_notes = params.notes;
+  inc.decided_by = params.managerId;
+  inc.decided_at = nowStr;
+  inc.penalty_applied = params.penaltyApplied || null;
+  inc.status = "resolved";
+  inc.resolved_at = nowStr;
+  inc.resolution_notes = `[${decisionInfo.label}] ${params.notes}`;
+  inc.updated_at = nowStr;
+
+  inc.timeline = inc.timeline || [];
+  inc.timeline.push({
+    id: `evt-${Date.now()}`,
+    incident_id: inc.id,
+    actor_id: params.managerId,
+    actor_name: manager ? manager.full_name : "Station Manager",
+    actor_role: manager ? manager.role : "manager",
+    action: "manager_decided",
+    notes: `Finding: ${decisionInfo.label}. Justification: ${params.notes}${
+      params.penaltyApplied ? ` (Terms: ${params.penaltyApplied})` : ""
+    }`,
+    timestamp: nowStr,
+  });
+
+  await logAuditEvent({
+    actor_id: params.managerId,
+    actor_role: manager ? manager.role : "manager",
+    action: "INCIDENT_DECIDED" as any,
+    resource_type: "incident",
+    resource_id: inc.id,
+    previous_state: { status: "under_review" },
+    new_state: {
+      status: "resolved",
+      decision: params.decision,
+      notes: params.notes,
+      penalty: params.penaltyApplied,
+    },
+    reason: `Manager finding recorded: ${decisionInfo.label}. ${params.notes}`,
+  });
+
+  // Notify borrower with plain-language explanation and dispute rights
+  if (inc.affected_user_id) {
+    await createNotification({
+      user_id: inc.affected_user_id,
+      title: `⚖️ Manager Finding: ${decisionInfo.label}`,
+      message: `Finding on Incident #${inc.id}: "${params.notes}". You may appeal this finding to Campus Administration within 48 hours.`,
+      type: "action_required",
+      category: "approved" as any,
+      link: `/incidents/${inc.id}`,
+    });
+  }
+
+  return { ...inc };
+}
+
+/**
+ * Borrower formally disputes a manager decision for Admin review.
+ */
+export async function disputeIncident(params: {
+  incidentId: string;
+  userId: string;
+  reason: string;
+}): Promise<Incident> {
+  const inc = runtimeIncidents.find((i) => i.id === params.incidentId);
+  if (!inc) throw new Error("Incident not found");
+
+  const user = getUserById(params.userId);
+  const nowStr = getAppTime().toISOString();
+
+  inc.dispute_reason = params.reason;
+  inc.disputed_at = nowStr;
+  inc.status = "disputed";
+  inc.updated_at = nowStr;
+
+  inc.timeline = inc.timeline || [];
+  inc.timeline.push({
+    id: `evt-${Date.now()}`,
+    incident_id: inc.id,
+    actor_id: params.userId,
+    actor_name: user ? user.full_name : "Borrower",
+    actor_role: user ? user.role : "user",
+    action: "dispute_raised",
+    notes: `Formal dispute appealed: "${params.reason}"`,
+    timestamp: nowStr,
+  });
+
+  await logAuditEvent({
+    actor_id: params.userId,
+    actor_role: user ? user.role : "user",
+    action: "INCIDENT_DISPUTED" as any,
+    resource_type: "incident",
+    resource_id: inc.id,
+    previous_state: { status: "resolved" },
+    new_state: { status: "disputed", dispute_reason: params.reason },
+    reason: `Borrower formally contested finding: "${params.reason}"`,
+  });
+
+  // Notify campus admin
+  const admins = SEED_USERS.filter((u) => u.role === "admin");
+  for (const admin of admins) {
+    await createNotification({
+      user_id: admin.id,
+      title: `🚨 Incident Dispute Escalated`,
+      message: `${user?.full_name || "Borrower"} disputed manager finding on Incident #${inc.id}. Administrative arbitration required.`,
+      type: "action_required",
+      category: "action_required" as any,
+      link: `/incidents/${inc.id}`,
+    });
+  }
+
+  return { ...inc };
+}
+
+/**
+ * Campus Administrator issues final binding arbitration on a disputed incident.
+ */
+export async function resolveIncidentDispute(params: {
+  incidentId: string;
+  adminId: string;
+  resolution: "upheld" | "overturned" | "compromise" | "dismissed";
+  notes: string;
+}): Promise<Incident> {
+  const inc = runtimeIncidents.find((i) => i.id === params.incidentId);
+  if (!inc) throw new Error("Incident not found");
+
+  const admin = getUserById(params.adminId);
+  const nowStr = getAppTime().toISOString();
+  const resolutionInfo = getAdminResolutionLabel(params.resolution);
+
+  inc.admin_resolution = params.resolution;
+  inc.admin_notes = params.notes;
+  inc.resolved_by = params.adminId;
+  inc.resolved_at = nowStr;
+  inc.resolution_notes = `[Council Ruling: ${resolutionInfo.label}] ${params.notes}`;
+  inc.status = "resolved";
+  inc.updated_at = nowStr;
+
+  inc.timeline = inc.timeline || [];
+  inc.timeline.push({
+    id: `evt-${Date.now()}`,
+    incident_id: inc.id,
+    actor_id: params.adminId,
+    actor_name: admin ? admin.full_name : "Campus Administrator",
+    actor_role: admin ? admin.role : "admin",
+    action: "admin_resolved",
+    notes: `Administrative Ruling: ${resolutionInfo.label}. Binding rationale: ${params.notes}`,
+    timestamp: nowStr,
+  });
+
+  await logAuditEvent({
+    actor_id: params.adminId,
+    actor_role: admin ? admin.role : "admin",
+    action: "INCIDENT_DISPUTE_RESOLVED" as any,
+    resource_type: "incident",
+    resource_id: inc.id,
+    previous_state: { status: "disputed" },
+    new_state: {
+      status: "resolved",
+      resolution: params.resolution,
+      notes: params.notes,
+    },
+    reason: `Campus governance arbitration completed: ${resolutionInfo.label}. ${params.notes}`,
+  });
+
+  // Notify borrower and manager
+  if (inc.affected_user_id) {
+    await createNotification({
+      user_id: inc.affected_user_id,
+      title: `🏛️ Final Administrative Ruling: ${resolutionInfo.label}`,
+      message: `Campus Governance issued final arbitration on Incident #${inc.id}: "${params.notes}"`,
+      type: "info",
+      category: "general",
+      link: `/incidents/${inc.id}`,
+    });
+  }
+
+  if (inc.reporter_id && inc.reporter_id !== inc.affected_user_id) {
+    await createNotification({
+      user_id: inc.reporter_id,
+      title: `🏛️ Final Administrative Ruling: ${resolutionInfo.label}`,
+      message: `Dispute on Incident #${inc.id} was arbitrated: "${params.notes}"`,
+      type: "info",
+      category: "general",
+      link: `/incidents/${inc.id}`,
+    });
+  }
+
+  return { ...inc };
+}
+
+/**
+ * Runs automated time-based trigger checks against current App Time.
+ * Detects overdue returns, upcoming reservation alerts, and return due warnings.
+ */
+export async function runTimeBasedTriggers(
+  appTime: Date
+): Promise<{ createdCount: number; events: TriggeredTimeEvent[] }> {
+  const triggeredEvents = detectTimeTriggerEvents(
+    runtimeBookings,
+    appTime,
+    runtimeNotifications
+  );
+
+  let createdCount = 0;
+
+  for (const event of triggeredEvents) {
+    // 1. Notify Borrower
+    await createNotification({
+      user_id: event.user_id,
+      title: event.title,
+      message: event.message,
+      type: event.severity,
+      category: event.type as any,
+      link: event.link,
+    });
+    createdCount++;
+
+    // 2. If Overdue and notify_owner: notify owner/manager with action button to open incident
+    if (event.notify_owner) {
+      const resource = await getResourceById(event.resource_id);
+      const borrower = getUserById(event.user_id);
+      const ownerId = resource?.owner_id;
+      const managerId = resource?.manager_id;
+
+      const ownerMessage = `Reservation #${event.booking_id} for "${resource?.name}" by ${
+        borrower?.full_name || "Borrower"
+      } is overdue. Click below to open an incident.`;
+
+      if (ownerId) {
+        await createNotification({
+          user_id: ownerId,
+          title: `🚨 Overdue Equipment Return: ${resource?.name}`,
+          message: ownerMessage,
+          type: "action_required",
+          category: "overdue",
+          link: event.link,
+          action_label: "Open Late Return Incident",
+          action_url: `/incidents/new?booking_id=${event.booking_id}&type=late_return`,
+        });
+        createdCount++;
+      }
+
+      if (managerId && managerId !== ownerId) {
+        await createNotification({
+          user_id: managerId,
+          title: `🚨 Overdue Equipment Return: ${resource?.name}`,
+          message: ownerMessage,
+          type: "action_required",
+          category: "overdue",
+          link: event.link,
+          action_label: "Open Late Return Incident",
+          action_url: `/incidents/new?booking_id=${event.booking_id}&type=late_return`,
+        });
+        createdCount++;
+      }
+    }
+  }
+
+  return { createdCount, events: triggeredEvents };
 }
 
 /**
@@ -1057,6 +1600,7 @@ export function resetDemoStore(): void {
   runtimeConditionRecords = JSON.parse(JSON.stringify(INITIAL_CONDITION_RECORDS));
   runtimeIncidents = JSON.parse(JSON.stringify(INITIAL_INCIDENTS));
   runtimeNotifications = JSON.parse(JSON.stringify(INITIAL_NOTIFICATIONS));
+  resetAppClock();
 }
 
 

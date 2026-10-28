@@ -278,8 +278,8 @@ export default async function OwnerDashboard() {
 
                   <div className="pt-1 flex items-center justify-between text-xs">
                     <span className="text-slate-500 font-mono">Booking: #{inc.booking_id}</span>
-                    <Link href={`/bookings/${inc.booking_id}`} className="text-indigo-600 font-semibold hover:underline flex items-center gap-1">
-                      Inspect Diff <ArrowRight className="w-3.5 h-3.5" />
+                    <Link href={`/incidents/${inc.id}`} className="text-indigo-600 font-semibold hover:underline flex items-center gap-1">
+                      Review Incident &amp; Findings <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
                   </div>
                 </div>

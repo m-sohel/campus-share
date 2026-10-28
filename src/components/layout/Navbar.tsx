@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { DemoClockControl } from "@/components/clock/DemoClockControl";
+import { ShieldAlert } from "lucide-react";
 
 interface NavbarProps {
   currentUser: Profile | null;
@@ -135,6 +137,20 @@ export function Navbar({ currentUser }: NavbarProps) {
               </span>
             </Link>
 
+            <Link
+              href="/incidents"
+              className={`px-3 py-2 text-sm font-medium rounded-md transition ${
+                pathname.startsWith("/incidents")
+                  ? "bg-slate-100 text-rose-600 dark:bg-slate-800 dark:text-rose-400 font-semibold"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800/60"
+              }`}
+            >
+              <span className="flex items-center gap-1.5">
+                <ShieldAlert className="w-4 h-4 text-rose-600" />
+                Incidents
+              </span>
+            </Link>
+
             {currentUser && (
               <>
                 <Link
@@ -197,7 +213,11 @@ export function Navbar({ currentUser }: NavbarProps) {
           </nav>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="hidden lg:block">
+            <DemoClockControl compact />
+          </div>
+
           <Link
             href="/judge"
             className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-900 hover:bg-amber-200 border border-amber-300 transition shadow-xs"

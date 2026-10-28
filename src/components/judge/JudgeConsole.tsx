@@ -26,6 +26,7 @@ import {
   Copy,
   AlertTriangle,
 } from "lucide-react";
+import { DemoClockControl } from "@/components/clock/DemoClockControl";
 
 interface JudgeConsoleProps {
   initialUser: Profile | null;
@@ -181,15 +182,15 @@ const LIFECYCLE_STEPS: ScriptStep[] = [
   },
   {
     step: 9,
-    title: "Incident Auto-Drafting (Zero Automated Penalties)",
-    roleName: "Jordan Taylor or Elena Rostova",
+    title: "Incident Governance & Audited Dispute Resolution",
+    roleName: "Jordan Taylor (Manager) / Lucas Wright (User) / Dr. Vance (Admin)",
     roleType: "manager",
     targetEmail: "manager.tech@campusshare.edu",
-    linkUrl: "/bookings/b-in-use-scope",
-    linkLabel: "View Diff & Draft Incident",
-    actionText: "Submit the return from Step 8. You are redirected to the booking diff view. Notice the Auto-Drafted Incident in 'Draft' status.",
-    observationText: "System highlights: 'Zero Automated Penalties. Facility technicians review physical evidence before any fee or waiver.'",
-    principleText: "No student or researcher is ever penalized or banned by an unreviewed algorithmic decision.",
+    linkUrl: "/incidents/inc-seed-drone-01",
+    linkLabel: "Inspect Incident #inc-seed-drone-01",
+    actionText: "Follow the 5-step accountability flow: 1. Manager opens draft -> 2. Switch to Lucas Wright & submit response statement -> 3. Switch to Jordan & record finding -> 4. Switch to Lucas & dispute -> 5. Switch to Dr. Vance & issue binding arbitration.",
+    observationText: "Notice the tamper-evident visual timeline, plain-language decision explanations, and zero automated penalties at every step.",
+    principleText: "AI and algorithms only assist; human participants and administrators decide and retain full accountability.",
   },
   {
     step: 10,
@@ -318,6 +319,19 @@ export function JudgeConsole({ initialUser }: JudgeConsoleProps) {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Simulated Demo Clock Section */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            Stage 8 Time-Based Flows &amp; Overdue Simulation
+          </span>
+          <span className="text-[11px] text-slate-400">
+            Fast-forward time to trigger overdue alerts &amp; booking reminders
+          </span>
+        </div>
+        <DemoClockControl />
       </div>
 
       {/* 1-Click Role Switcher Section */}

@@ -315,10 +315,10 @@ export default async function ManagerDashboard() {
               <div className="pt-2 flex items-center justify-between text-xs border-t border-amber-200/60">
                 <span className="text-slate-500 font-mono">Booking: #{inc.booking_id}</span>
                 <Link
-                  href={`/bookings/${inc.booking_id}`}
+                  href={`/incidents/${inc.id}`}
                   className="text-indigo-600 font-bold hover:underline flex items-center gap-1"
                 >
-                  Inspect Diff & Details <ArrowRight className="w-3.5 h-3.5" />
+                  Manage Incident &amp; Decisions <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
             </div>
