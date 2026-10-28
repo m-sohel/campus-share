@@ -49,8 +49,8 @@ export default async function ResourceDetailPage({ params }: ResourceDetailPageP
       {/* Navigation Breadcrumb */}
       <div className="flex items-center justify-between">
         <Link
-          href="/resources"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition"
+          href="/"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-dusty-olive-600 hover:text-dusty-olive-950 transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Back to Equipment Catalog
@@ -75,7 +75,7 @@ export default async function ResourceDetailPage({ params }: ResourceDetailPageP
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Photo & Quick Specs */}
         <div className="lg:col-span-5 space-y-4">
-          <div className="relative h-72 w-full rounded-2xl overflow-hidden border border-slate-200 shadow-sm bg-slate-100">
+          <div className="relative h-72 w-full rounded-2xl overflow-hidden border border-dusty-olive-200/90 shadow-xs bg-dusty-olive-100">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={resource.image_url || "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800"}
@@ -83,16 +83,16 @@ export default async function ResourceDetailPage({ params }: ResourceDetailPageP
               className="h-full w-full object-cover"
             />
             <div className="absolute top-3 left-3 flex items-center gap-2">
-              <Badge variant="secondary" className="bg-white/95 text-slate-900 backdrop-blur font-bold uppercase text-[10px]">
+              <Badge variant="outline" className="bg-white/95 text-dusty-olive-900 border-dusty-olive-200 backdrop-blur font-bold uppercase text-[10px]">
                 {resource.category.replace("_", " ")}
               </Badge>
-              <Badge variant="outline" className="bg-black/50 text-white border-0 text-[10px] capitalize">
+              <Badge variant="outline" className="bg-dusty-olive-950/70 text-white border-0 text-[10px] capitalize">
                 {resource.institution}
               </Badge>
             </div>
             {resource.is_high_demand && (
               <div className="absolute top-3 right-3">
-                <Badge variant="destructive" className="font-bold text-[10px] uppercase shadow-md">
+                <Badge variant="destructive" className="font-bold text-[10px] uppercase shadow-xs">
                   High Demand Resource
                 </Badge>
               </div>
@@ -101,33 +101,33 @@ export default async function ResourceDetailPage({ params }: ResourceDetailPageP
 
           {/* Quick Details Box */}
           <Card>
-            <CardContent className="p-4 space-y-2.5 text-xs text-slate-700">
+            <CardContent className="p-5 space-y-2.5 text-xs text-dusty-olive-800">
               <div className="flex items-center justify-between">
-                <span className="text-slate-500">Facility Location:</span>
-                <span className="font-semibold text-slate-900 flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                <span className="text-dusty-olive-500">Facility Location:</span>
+                <span className="font-semibold text-dusty-olive-950 flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5 text-dusty-olive-400" />
                   {resource.location}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500">Max Reservation Window:</span>
-                <span className="font-semibold text-slate-900">{resource.max_duration_hours} Hours</span>
+                <span className="text-dusty-olive-500">Max Reservation Window:</span>
+                <span className="font-semibold text-dusty-olive-950">{resource.max_duration_hours} Hours</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500">Minimum Advance Notice:</span>
-                <span className="font-semibold text-slate-900">{resource.min_lead_time_hours} Hours Lead</span>
+                <span className="text-dusty-olive-500">Minimum Advance Notice:</span>
+                <span className="font-semibold text-dusty-olive-950">{resource.min_lead_time_hours} Hours Lead</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500">Security Deposit / Fee:</span>
-                <span className="font-semibold text-slate-900">
+                <span className="text-dusty-olive-500">Security Deposit / Fee:</span>
+                <span className="font-semibold text-dusty-olive-950">
                   {resource.deposit_required_cents > 0
                     ? `$${(resource.deposit_required_cents / 100).toFixed(2)} refundable deposit`
                     : "Free for verified members"}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-500">Technician Supervision:</span>
-                <span className="font-semibold text-slate-900">
+                <span className="text-dusty-olive-500">Technician Supervision:</span>
+                <span className="font-semibold text-dusty-olive-950">
                   {resource.requires_supervision ? "Mandatory Staff Presence" : "Self-Operated (with Cert)"}
                 </span>
               </div>
@@ -138,23 +138,23 @@ export default async function ResourceDetailPage({ params }: ResourceDetailPageP
         {/* Info & Live Eligibility Engine Card */}
         <div className="lg:col-span-7 space-y-6">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-dusty-olive-950 tracking-tight">
               {resource.name}
             </h1>
-            <p className="text-slate-600 text-sm mt-2 leading-relaxed">
+            <p className="text-dusty-olive-700 text-sm mt-2 leading-relaxed">
               {resource.description}
             </p>
           </div>
 
           {/* THE ELIGIBILITY ENGINE CARD */}
-          <Card className={`border-2 transition shadow-sm ${
-            eligibility.isEligible ? "border-emerald-300 bg-emerald-50/20" : "border-amber-300 bg-amber-50/20"
+          <Card className={`border-2 transition-colors shadow-xs ${
+            eligibility.isEligible ? "border-celadon-300 bg-celadon-50/30" : "border-dusty-olive-300 bg-dusty-olive-50/40"
           }`}>
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <ShieldCheck className={`w-5 h-5 ${eligibility.isEligible ? "text-emerald-600" : "text-amber-600"}`} />
-                  Requirement & Eligibility Engine
+                  <ShieldCheck className={`w-5 h-5 ${eligibility.isEligible ? "text-celadon-700" : "text-dusty-olive-600"}`} />
+                  Requirement &amp; Eligibility Engine
                 </CardTitle>
                 <Badge variant={eligibility.isEligible ? "success" : "warning"} className="font-bold">
                   {eligibility.isEligible ? "Qualified to Book" : "Prerequisites Required"}
@@ -168,15 +168,15 @@ export default async function ResourceDetailPage({ params }: ResourceDetailPageP
 
             <CardContent className="space-y-4">
               {/* Summary Explanation */}
-              <div className={`p-3 rounded-lg border text-xs leading-relaxed flex items-start gap-2.5 ${
+              <div className={`p-3.5 rounded-xl border text-xs leading-relaxed flex items-start gap-2.5 ${
                 eligibility.isEligible
-                  ? "bg-emerald-50 text-emerald-900 border-emerald-200"
-                  : "bg-amber-50 text-amber-900 border-amber-200"
+                  ? "bg-celadon-50 text-celadon-950 border-celadon-200"
+                  : "bg-dusty-olive-100/80 text-dusty-olive-900 border-dusty-olive-200"
               }`}>
                 {eligibility.isEligible ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-4 h-4 text-celadon-700 shrink-0 mt-0.5" />
                 ) : (
-                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <AlertCircle className="w-4 h-4 text-dusty-olive-600 shrink-0 mt-0.5" />
                 )}
                 <div>
                   <span className="font-bold block">Eligibility Result:</span>
@@ -187,22 +187,22 @@ export default async function ResourceDetailPage({ params }: ResourceDetailPageP
               {/* Individual Requirement Checks */}
               {eligibility.checks.length > 0 ? (
                 <div className="space-y-2.5">
-                  <span className="text-xs font-bold text-slate-800 block">
-                    Qualification Checklist & Status:
+                  <span className="text-xs font-bold text-dusty-olive-900 block">
+                    Qualification Checklist &amp; Status:
                   </span>
                   {eligibility.checks.map((c, i) => (
                     <div
                       key={i}
-                      className="p-3 rounded-lg border border-slate-200 bg-white space-y-2 text-xs"
+                      className="p-3.5 rounded-xl border border-dusty-olive-200/90 bg-white space-y-2 text-xs"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2">
-                          {c.status === "pass" && <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />}
+                          {c.status === "pass" && <CheckCircle2 className="w-4 h-4 text-celadon-700 shrink-0" />}
                           {c.status === "fail" && <XCircle className="w-4 h-4 text-rose-600 shrink-0" />}
                           {c.status === "expired" && <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />}
-                          {c.status === "pending-verification" && <Clock className="w-4 h-4 text-blue-600 shrink-0" />}
+                          {c.status === "pending-verification" && <Clock className="w-4 h-4 text-muted-teal-600 shrink-0" />}
 
-                          <span className="font-semibold text-slate-900 capitalize">
+                          <span className="font-semibold text-dusty-olive-950 capitalize">
                             {c.requirement.credential_type.replace(/_/g, " ")}
                           </span>
                         </div>
@@ -214,7 +214,7 @@ export default async function ResourceDetailPage({ params }: ResourceDetailPageP
                               : c.status === "expired"
                               ? "warning"
                               : c.status === "pending-verification"
-                              ? "secondary"
+                              ? "teal"
                               : "destructive"
                           }
                           className="uppercase text-[9px] font-bold"
@@ -224,18 +224,18 @@ export default async function ResourceDetailPage({ params }: ResourceDetailPageP
                       </div>
 
                       {/* Plain-Language Reason */}
-                      <p className="text-slate-600 pl-6 leading-relaxed">
+                      <p className="text-dusty-olive-700 pl-6 leading-relaxed">
                         {c.reason}
                       </p>
 
                       {/* How To Fix Button */}
                       {c.fixAction && (
                         <div className="pl-6 pt-1 flex items-center justify-between">
-                          <span className="text-[11px] text-slate-500 italic">
+                          <span className="text-[11px] text-dusty-olive-500 italic">
                             {c.fixAction.description}
                           </span>
                           <Link href={c.fixAction.actionUrl}>
-                            <Button size="sm" variant="outline" className="h-7 text-[11px] font-semibold text-indigo-600 hover:text-indigo-700">
+                            <Button size="sm" variant="outline" className="h-7 text-[11px] font-semibold text-celadon-800 hover:text-celadon-900 border-dusty-olive-300">
                               {c.fixAction.label} &rarr;
                             </Button>
                           </Link>
@@ -245,7 +245,7 @@ export default async function ResourceDetailPage({ params }: ResourceDetailPageP
                   ))}
                 </div>
               ) : (
-                <div className="text-xs text-slate-500 italic">
+                <div className="text-xs text-dusty-olive-500 italic">
                   This station has no safety prerequisite restrictions. Any verified community member can request access.
                 </div>
               )}
@@ -256,12 +256,12 @@ export default async function ResourceDetailPage({ params }: ResourceDetailPageP
                   eligibility.isEligible ? (
                     <div className="space-y-2">
                       <Link href={`/bookings/new?resource_id=${resource.id}`} className="block">
-                        <Button className="w-full font-semibold h-11 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm gap-2">
+                        <Button className="w-full font-bold h-11 bg-celadon-700 hover:bg-celadon-800 text-white shadow-xs gap-2">
                           <CheckCircle2 className="w-4 h-4" />
                           Proceed to Request Booking (Slot Picker)
                         </Button>
                       </Link>
-                      <p className="text-center text-[11px] text-slate-500">
+                      <p className="text-center text-[11px] text-dusty-olive-500">
                         You meet all qualifications. Your request will be routed to the equipment owner for review.
                       </p>
                     </div>
@@ -269,12 +269,12 @@ export default async function ResourceDetailPage({ params }: ResourceDetailPageP
                     <div className="space-y-2">
                       <Button
                         disabled
-                        className="w-full font-semibold h-11 opacity-60 cursor-not-allowed bg-slate-300 text-slate-700 gap-2"
+                        className="w-full font-semibold h-11 opacity-60 cursor-not-allowed bg-dusty-olive-200 text-dusty-olive-600 gap-2"
                       >
                         <Lock className="w-4 h-4" />
                         Request Booking Blocked
                       </Button>
-                      <div className="rounded-lg bg-rose-50 border border-rose-200 p-2.5 text-rose-800 text-xs text-center">
+                      <div className="rounded-xl bg-rose-50 border border-rose-200 p-2.5 text-rose-800 text-xs text-center">
                         <strong>Action Required:</strong> Resolve the missing or expired credentials listed above before requesting this resource.
                       </div>
                     </div>
@@ -282,8 +282,8 @@ export default async function ResourceDetailPage({ params }: ResourceDetailPageP
                 ) : (
                   <div className="space-y-2">
                     <Link href="/login" className="block">
-                      <Button className="w-full font-semibold h-11 bg-indigo-600 hover:bg-indigo-700 gap-2">
-                        Sign In to Prove Eligibility & Request Booking
+                      <Button className="w-full font-bold h-11 bg-celadon-700 hover:bg-celadon-800 text-white gap-2">
+                        Sign In to Prove Eligibility &amp; Request Booking
                         <ArrowRight className="w-4 h-4" />
                       </Button>
                     </Link>
@@ -297,51 +297,51 @@ export default async function ResourceDetailPage({ params }: ResourceDetailPageP
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-bold flex items-center gap-1.5">
+                <CardTitle className="text-sm font-bold flex items-center gap-1.5 text-dusty-olive-950">
                   <ShieldAlert className="w-4 h-4 text-amber-600" />
-                  Usage Rules & Code of Conduct
+                  Usage Rules &amp; Code of Conduct
                 </CardTitle>
               </CardHeader>
-              <CardContent className="text-xs text-slate-600 leading-relaxed">
+              <CardContent className="text-xs text-dusty-olive-700 leading-relaxed">
                 {resource.rules}
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-bold flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-indigo-600" />
-                  Safety Protocols & PPE
+                <CardTitle className="text-sm font-bold flex items-center gap-1.5 text-dusty-olive-950">
+                  <ShieldCheck className="w-4 h-4 text-celadon-700" />
+                  Safety Protocols &amp; PPE
                 </CardTitle>
               </CardHeader>
-              <CardContent className="text-xs text-slate-600 leading-relaxed">
+              <CardContent className="text-xs text-dusty-olive-700 leading-relaxed">
                 {resource.safety_notes || "Safety glasses and closed-toe shoes mandatory during operation."}
               </CardContent>
             </Card>
           </div>
 
-          {/* Handover Condition Checklist (Step 7 & 8 Transparency) */}
+          {/* Handover Condition Checklist */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-bold flex items-center gap-1.5">
-                <ClipboardCheck className="w-4 h-4 text-indigo-600" />
-                Physical Inspection Checklist (Step 7 Check-in & Step 8 Return)
+              <CardTitle className="text-sm font-bold flex items-center gap-1.5 text-dusty-olive-950">
+                <ClipboardCheck className="w-4 h-4 text-celadon-700" />
+                Physical Inspection Checklist (Step 7 Check-in &amp; Step 8 Return)
               </CardTitle>
               <CardDescription className="text-xs">
                 These items are logged before and after your reservation to protect both parties from unwarranted damage claims.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-700">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-dusty-olive-800">
                 {(resource.condition_checklist || [
                   "Chassis and structural integrity",
                   "Optical lenses or build plate clean",
                   "Safety interlock operational",
                   "Accessories and cables accounted for",
                 ]).map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-2 p-2 rounded bg-slate-50 border border-slate-200">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                    <span className="truncate">{item}</span>
+                  <div key={idx} className="flex items-center gap-2 p-2.5 rounded-xl bg-dusty-olive-50 border border-dusty-olive-200">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-celadon-700 shrink-0" />
+                    <span className="truncate font-medium">{item}</span>
                   </div>
                 ))}
               </div>
@@ -352,4 +352,3 @@ export default async function ResourceDetailPage({ params }: ResourceDetailPageP
     </div>
   );
 }
-

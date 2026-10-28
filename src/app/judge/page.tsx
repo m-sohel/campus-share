@@ -12,7 +12,7 @@ export default async function JudgePage() {
   const user = await getCurrentUser();
 
   return (
-    <div className="min-h-screen bg-slate-50/50 py-8 px-4 sm:px-6">
+    <div className="min-h-screen bg-dusty-olive-50/40 py-8 px-4 sm:px-6">
       <div className="max-w-6xl mx-auto">
         <JudgeConsole initialUser={user} />
       </div>

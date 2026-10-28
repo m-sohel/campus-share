@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, use } from "react";
+import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,6 @@ import {
   AlertCircle,
   ArrowLeft,
   ArrowRight,
-  ShieldCheck,
 } from "lucide-react";
 
 const QUALIFICATION_PRESETS = [
@@ -117,35 +116,35 @@ export default function RequestCredentialPage() {
       <div className="mb-6">
         <Link
           href="/resources"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition mb-3"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-dusty-olive-600 hover:text-dusty-olive-950 transition mb-3"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Back to Equipment Catalog
         </Link>
-        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-          Request Safety Qualification & Training
+        <h1 className="text-3xl font-extrabold text-dusty-olive-950 tracking-tight">
+          Request Safety Qualification &amp; Training
         </h1>
-        <p className="text-sm text-slate-600 mt-1">
+        <p className="text-sm text-dusty-olive-600 mt-1">
           Submit documentation or request official verification from campus and makerspace safety officers.
         </p>
       </div>
 
       {submitted ? (
-        <Card className="border-emerald-200 bg-emerald-50/50 text-center p-8 space-y-4">
-          <div className="h-14 w-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+        <Card className="border-celadon-300 bg-celadon-50/60 text-center p-8 space-y-4 shadow-xs">
+          <div className="h-14 w-14 rounded-2xl bg-celadon-100 text-celadon-700 flex items-center justify-center mx-auto shadow-xs">
             <CheckCircle2 className="w-8 h-8" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-slate-900">
+            <h2 className="text-xl font-bold text-dusty-olive-950">
               Qualification Request Submitted!
             </h2>
-            <p className="text-sm text-slate-600 mt-2 max-w-md mx-auto">
+            <p className="text-sm text-dusty-olive-600 mt-2 max-w-md mx-auto">
               Your request for <strong>{title}</strong> has been logged to the verification queue and recorded in the audit trail.
             </p>
           </div>
           <div className="pt-4 flex flex-wrap items-center justify-center gap-3">
             <Link href="/dashboard/user">
-              <Button variant="default" className="gap-2 font-semibold">
+              <Button variant="default" className="gap-2 font-semibold bg-celadon-700 hover:bg-celadon-800 text-white shadow-xs">
                 View My Credentials Dashboard
                 <ArrowRight className="w-4 h-4" />
               </Button>
@@ -160,36 +159,36 @@ export default function RequestCredentialPage() {
       ) : (
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-rose-800 text-sm flex items-start gap-2.5">
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-900 text-sm flex items-start gap-2.5">
               <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
           )}
 
-          <Card>
+          <Card className="border-dusty-olive-200/90 shadow-xs">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <FileBadge className="w-5 h-5 text-indigo-600" />
+                <CardTitle className="text-lg flex items-center gap-2 text-dusty-olive-950">
+                  <FileBadge className="w-5 h-5 text-celadon-700" />
                   Select Qualification Endorsement
                 </CardTitle>
-                <Badge variant={isRenewal ? "warning" : isAppeal ? "destructive" : "default"}>
+                <Badge variant={isRenewal ? "warning" : isAppeal ? "destructive" : "accent"}>
                   {isRenewal ? "Recertification" : isAppeal ? "Appeal Review" : "Initial Training"}
                 </Badge>
               </div>
-              <CardDescription>
+              <CardDescription className="text-dusty-olive-500">
                 Choose the required credential you need verified to access high-value hardware.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700">
+                <label className="text-xs font-semibold text-dusty-olive-800">
                   Standard Safety Tier *
                 </label>
                 <select
                   value={credentialType}
                   onChange={(e) => handleSelectPreset(e.target.value)}
-                  className="w-full h-10 px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full h-10 px-3 py-2 rounded-xl border border-dusty-olive-300 bg-white text-sm text-dusty-olive-950 focus:outline-none focus:ring-2 focus:ring-celadon-600"
                 >
                   {QUALIFICATION_PRESETS.map((p) => (
                     <option key={p.type} value={p.type}>
@@ -200,7 +199,7 @@ export default function RequestCredentialPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700">
+                <label className="text-xs font-semibold text-dusty-olive-800">
                   Official Credential Name / Certificate Title *
                 </label>
                 <Input
@@ -212,7 +211,7 @@ export default function RequestCredentialPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700">
+                <label className="text-xs font-semibold text-dusty-olive-800">
                   Verification Notes / Safety Training Evidence *
                 </label>
                 <textarea
@@ -220,13 +219,13 @@ export default function RequestCredentialPage() {
                   onChange={(e) => setNotes(e.target.value)}
                   rows={3}
                   placeholder="State which workshop you attended, exam score, instructor name, or prior operating experience..."
-                  className="w-full p-3 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full p-3 rounded-xl border border-dusty-olive-300 bg-white text-sm text-dusty-olive-950 focus:outline-none focus:ring-2 focus:ring-celadon-600"
                   required
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700">
+                <label className="text-xs font-semibold text-dusty-olive-800">
                   Evidence Document / LMS Certificate URL (Optional)
                 </label>
                 <Input
@@ -245,7 +244,7 @@ export default function RequestCredentialPage() {
               </Button>
             </Link>
 
-            <Button type="submit" disabled={loading} className="font-semibold gap-2 px-6">
+            <Button type="submit" disabled={loading} className="font-semibold gap-2 px-6 bg-celadon-700 hover:bg-celadon-800 text-white shadow-xs">
               {loading ? "Submitting Request..." : "Submit to Staff Verification Queue"}
               <Sparkles className="w-4 h-4" />
             </Button>
@@ -255,4 +254,3 @@ export default function RequestCredentialPage() {
     </div>
   );
 }
-

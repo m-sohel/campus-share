@@ -46,7 +46,7 @@ export function DemoClockControl({ compact = false }: { compact?: boolean }) {
 
         if (data.triggersCreated > 0) {
           setLastNotificationMsg(
-            `⚡ Fast-forward triggered ${data.triggersCreated} new notifications (overdue/reminders)!`
+            `⚡ Fast-forward triggered ${data.triggersCreated} new time notifications (overdue/reminders)!`
           );
         } else if (action === "reset") {
           setLastNotificationMsg("Clock reset to real time.");
@@ -74,11 +74,11 @@ export function DemoClockControl({ compact = false }: { compact?: boolean }) {
   if (compact) {
     return (
       <div className="flex items-center gap-1.5 text-xs">
-        <div className="flex items-center gap-1 bg-slate-900/80 text-white px-2.5 py-1 rounded-lg border border-slate-700 shadow-inner">
-          <Clock className="w-3.5 h-3.5 text-indigo-400" />
+        <div className="flex items-center gap-1.5 bg-dusty-olive-950 text-white px-2.5 py-1 rounded-lg border border-dusty-olive-800 shadow-inner">
+          <Clock className="w-3.5 h-3.5 text-tea-green-400" />
           <span className="font-mono text-[11px] font-semibold">{formattedTime}</span>
           {offsetHours > 0 && (
-            <Badge variant="warning" className="text-[9px] px-1 py-0 h-4 uppercase font-bold">
+            <Badge variant="accent" className="text-[9px] px-1 py-0 h-4 uppercase font-bold">
               +{offsetHours}h
             </Badge>
           )}
@@ -89,8 +89,8 @@ export function DemoClockControl({ compact = false }: { compact?: boolean }) {
           variant="outline"
           onClick={() => handleClockAction("advance_hour")}
           disabled={isLoading}
-          className="h-7 px-2 text-[11px] bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700"
-          title="Advance clock by 1 hour"
+          className="h-7 px-2 text-[11px] bg-dusty-olive-900 hover:bg-dusty-olive-800 text-dusty-olive-100 border-dusty-olive-700"
+          title="Advance simulated clock by 1 hour"
         >
           +1h
         </Button>
@@ -100,8 +100,8 @@ export function DemoClockControl({ compact = false }: { compact?: boolean }) {
           variant="outline"
           onClick={() => handleClockAction("advance_day")}
           disabled={isLoading}
-          className="h-7 px-2 text-[11px] bg-indigo-900/60 text-indigo-200 border-indigo-700 hover:bg-indigo-800"
-          title="Advance clock by 1 day"
+          className="h-7 px-2 text-[11px] bg-celadon-800 hover:bg-celadon-700 text-white border-celadon-600"
+          title="Advance simulated clock by 1 day"
         >
           +1d
         </Button>
@@ -112,8 +112,8 @@ export function DemoClockControl({ compact = false }: { compact?: boolean }) {
             variant="ghost"
             onClick={() => handleClockAction("reset")}
             disabled={isLoading}
-            className="h-7 w-7 p-0 text-slate-400 hover:text-white"
-            title="Reset to real time"
+            className="h-7 w-7 p-0 text-dusty-olive-400 hover:text-white"
+            title="Reset to real system time"
           >
             <RotateCcw className="w-3 h-3" />
           </Button>
@@ -123,19 +123,19 @@ export function DemoClockControl({ compact = false }: { compact?: boolean }) {
   }
 
   return (
-    <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 text-white border border-indigo-800/50 shadow-md space-y-3">
+    <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-dusty-olive-950 via-soft-celadon-950 to-muted-teal-950 text-white border border-dusty-olive-800/80 shadow-sm space-y-3">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+          <div className="h-10 w-10 rounded-xl bg-celadon-600/20 border border-celadon-500/30 flex items-center justify-center text-tea-green-300">
             <Clock className="w-5 h-5 animate-pulse" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs uppercase font-extrabold tracking-wider text-indigo-300">
+              <span className="text-xs uppercase font-extrabold tracking-wider text-tea-green-300">
                 Simulated Campus Clock
               </span>
               {offsetHours > 0 && (
-                <Badge variant="warning" className="text-[10px] uppercase font-bold px-1.5 py-0">
+                <Badge variant="accent" className="text-[10px] uppercase font-bold px-1.5 py-0">
                   +{offsetHours} Hours Fast-Forwarded
                 </Badge>
               )}
@@ -146,7 +146,7 @@ export function DemoClockControl({ compact = false }: { compact?: boolean }) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
             size="sm"
             variant="outline"
@@ -154,7 +154,7 @@ export function DemoClockControl({ compact = false }: { compact?: boolean }) {
             disabled={isLoading}
             className="bg-white/10 hover:bg-white/20 text-white border-white/20 text-xs font-bold gap-1"
           >
-            <FastForward className="w-3.5 h-3.5 text-indigo-300" />
+            <FastForward className="w-3.5 h-3.5 text-tea-green-300" />
             +1 Hour
           </Button>
 
@@ -162,9 +162,9 @@ export function DemoClockControl({ compact = false }: { compact?: boolean }) {
             size="sm"
             onClick={() => handleClockAction("advance_day")}
             disabled={isLoading}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold gap-1 shadow-sm"
+            className="bg-celadon-600 hover:bg-celadon-500 text-white text-xs font-bold gap-1 shadow-xs"
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+            <Sparkles className="w-3.5 h-3.5 text-tea-green-200" />
             +1 Day (Trigger Overdue)
           </Button>
 
@@ -174,7 +174,7 @@ export function DemoClockControl({ compact = false }: { compact?: boolean }) {
               variant="outline"
               onClick={() => handleClockAction("reset")}
               disabled={isLoading}
-              className="bg-transparent hover:bg-white/10 text-slate-300 border-slate-700 text-xs font-semibold gap-1"
+              className="bg-transparent hover:bg-white/10 text-dusty-olive-300 border-dusty-olive-700 text-xs font-semibold gap-1"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               Reset Real Time
@@ -184,8 +184,8 @@ export function DemoClockControl({ compact = false }: { compact?: boolean }) {
       </div>
 
       {lastNotificationMsg && (
-        <div className="text-xs px-3 py-1.5 rounded-lg bg-indigo-500/20 border border-indigo-500/30 text-indigo-200 flex items-center gap-2">
-          <AlertTriangle className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+        <div className="text-xs px-3 py-1.5 rounded-lg bg-soft-celadon-900/60 border border-soft-celadon-700/60 text-tea-green-200 flex items-center gap-2">
+          <AlertTriangle className="w-3.5 h-3.5 text-tea-green-400 shrink-0" />
           <span>{lastNotificationMsg}</span>
         </div>
       )}

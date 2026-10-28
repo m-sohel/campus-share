@@ -16,7 +16,6 @@ import {
   Clock,
   ShieldCheck,
   Send,
-  ArrowRight,
   ShieldAlert,
 } from "lucide-react";
 
@@ -131,17 +130,17 @@ export function ReturnForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Mobile-first Header Context Card */}
-      <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-amber-50/30 p-5 shadow-sm space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-200">
+      <div className="rounded-2xl border border-dusty-olive-200/90 bg-gradient-to-br from-dusty-olive-50/50 via-white to-soft-celadon-50/40 p-5 shadow-xs space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-dusty-olive-100">
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-wider">
+            <Badge variant="teal" className="text-[10px] uppercase font-bold tracking-wider">
               Step 8 Return Inspection
             </Badge>
             <Badge variant="warning" className="text-[10px] uppercase font-bold">
               Booking #{booking.id.slice(0, 12)}
             </Badge>
           </div>
-          <span className="text-xs text-slate-700 font-semibold flex items-center gap-1">
+          <span className="text-xs text-dusty-olive-700 font-semibold flex items-center gap-1">
             <Clock className="w-3.5 h-3.5 text-amber-600" />
             Scheduled End:{" "}
             {new Date(booking.end_time).toLocaleTimeString([], {
@@ -153,21 +152,21 @@ export function ReturnForm({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
           <div className="space-y-1">
-            <span className="text-slate-500 flex items-center gap-1">
-              <Building2 className="w-3.5 h-3.5 text-indigo-600" /> Resource Station:
+            <span className="text-dusty-olive-500 flex items-center gap-1 font-medium">
+              <Building2 className="w-3.5 h-3.5 text-celadon-700" /> Resource Station:
             </span>
-            <p className="font-bold text-slate-900 text-sm">{resource.name}</p>
-            <p className="text-slate-600">{resource.location}</p>
+            <p className="font-bold text-dusty-olive-950 text-sm">{resource.name}</p>
+            <p className="text-dusty-olive-600">{resource.location}</p>
           </div>
 
           <div className="space-y-1">
-            <span className="text-slate-500 flex items-center gap-1">
-              <User className="w-3.5 h-3.5 text-indigo-600" /> Borrower:
+            <span className="text-dusty-olive-500 flex items-center gap-1 font-medium">
+              <User className="w-3.5 h-3.5 text-celadon-700" /> Borrower:
             </span>
-            <p className="font-bold text-slate-900 text-sm">
+            <p className="font-bold text-dusty-olive-950 text-sm">
               {borrower ? borrower.full_name : "David Kim"}
             </p>
-            <p className="text-slate-600">
+            <p className="text-dusty-olive-600">
               {borrower?.department || "Startup Team"} • Score: {borrower?.reputation_score ?? 90}/100
             </p>
           </div>
@@ -176,8 +175,8 @@ export function ReturnForm({
 
       {/* Late Return Alert if applicable */}
       {liveLateCheck.isLate && (
-        <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-xs text-amber-900 flex items-start gap-3">
-          <Clock className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+        <div className="rounded-xl border border-amber-300 bg-amber-50/80 p-4 text-xs text-amber-950 flex items-start gap-3">
+          <Clock className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
           <div className="space-y-1">
             <strong className="block text-amber-950 font-bold">
               Late Return Detected (+{liveLateCheck.minutesLate} minutes)
@@ -190,7 +189,7 @@ export function ReturnForm({
       )}
 
       {errorMessage && (
-        <div className="rounded-xl border border-rose-300 bg-rose-50 p-4 text-xs text-rose-800 flex items-center gap-2">
+        <div className="rounded-xl border border-rose-300 bg-rose-50 p-4 text-xs text-rose-900 flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 shrink-0 text-rose-600" />
           <span>{errorMessage}</span>
         </div>
@@ -198,18 +197,18 @@ export function ReturnForm({
 
       {/* Live Diff Warning Banner if degraded */}
       {liveDiff.hasWorsened && (
-        <div className="rounded-xl border-2 border-amber-400 bg-amber-50 p-4 text-amber-950 text-xs sm:text-sm flex items-start gap-3 shadow-sm">
+        <div className="rounded-2xl border-2 border-amber-300 bg-amber-50/80 p-4 text-amber-950 text-xs sm:text-sm flex items-start gap-3 shadow-xs">
           <ShieldAlert className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <strong className="block text-amber-950 font-bold">
                 Degradation Flagged: Draft Incident will be created
               </strong>
-              <Badge variant="warning" className="text-[10px] uppercase font-bold bg-amber-200">
+              <Badge variant="warning" className="text-[10px] uppercase font-bold">
                 Draft Status
               </Badge>
             </div>
-            <p className="text-amber-800 text-xs leading-relaxed">
+            <p className="text-amber-900 text-xs leading-relaxed">
               {liveDiff.worsenedItemsCount} checkpoint(s) have degraded since Step 7 check-in. CampusShare will automatically create an incident in <strong>Draft</strong> status for human manager review. No automated penalty is applied.
             </p>
           </div>
@@ -220,14 +219,14 @@ export function ReturnForm({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-bold text-base text-slate-900">
+            <h3 className="font-bold text-base text-dusty-olive-950">
               Return Inspection Checkpoints
             </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-dusty-olive-600 mt-0.5">
               Compare current condition against baseline recorded at check-in.
             </p>
           </div>
-          <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full">
+          <span className="text-xs font-semibold text-dusty-olive-700 bg-dusty-olive-100/80 px-2.5 py-1 rounded-full">
             {returnItems.length} Checkpoints
           </span>
         </div>
@@ -244,20 +243,20 @@ export function ReturnForm({
                 key={index}
                 className={`rounded-2xl border p-4 sm:p-5 transition ${
                   isDegraded
-                    ? "border-amber-400 bg-amber-50/40 shadow-sm"
-                    : "border-slate-200 bg-white shadow-sm"
+                    ? "border-amber-400 bg-amber-50/50 shadow-xs"
+                    : "border-dusty-olive-200/90 bg-white shadow-xs"
                 }`}
               >
                 <div className="space-y-3">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <span className="font-bold text-sm text-slate-900 leading-snug">
+                    <span className="font-bold text-sm text-dusty-olive-950 leading-snug">
                       {index + 1}. {item.item}
                     </span>
 
                     {/* Baseline indicator pill */}
-                    <div className="flex items-center gap-1.5 text-xs text-slate-500 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200 shrink-0">
+                    <div className="flex items-center gap-1.5 text-xs text-dusty-olive-600 bg-dusty-olive-50/70 px-2.5 py-1 rounded-lg border border-dusty-olive-200/80 shrink-0">
                       <span>Initial Check-in:</span>
-                      <span className="font-semibold uppercase text-[10px] text-slate-800">
+                      <span className="font-semibold uppercase text-[10px] text-dusty-olive-900">
                         {initialItem.state}
                       </span>
                     </div>
@@ -268,10 +267,10 @@ export function ReturnForm({
                     <button
                       type="button"
                       onClick={() => handleStateChange(index, "ok")}
-                      className={`py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 border ${
+                      className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border ${
                         item.state === "ok"
-                          ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
-                          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                          ? "bg-celadon-700 text-white border-celadon-700 shadow-xs"
+                          : "bg-white text-dusty-olive-800 border-dusty-olive-200 hover:bg-dusty-olive-50"
                       }`}
                     >
                       <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
@@ -281,10 +280,10 @@ export function ReturnForm({
                     <button
                       type="button"
                       onClick={() => handleStateChange(index, "minor_issue")}
-                      className={`py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 border ${
+                      className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border ${
                         item.state === "minor_issue"
-                          ? "bg-amber-500 text-white border-amber-500 shadow-sm"
-                          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                          ? "bg-amber-600 text-white border-amber-600 shadow-xs"
+                          : "bg-white text-dusty-olive-800 border-dusty-olive-200 hover:bg-dusty-olive-50"
                       }`}
                     >
                       <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
@@ -294,10 +293,10 @@ export function ReturnForm({
                     <button
                       type="button"
                       onClick={() => handleStateChange(index, "damaged")}
-                      className={`py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 border ${
+                      className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border ${
                         item.state === "damaged"
-                          ? "bg-rose-600 text-white border-rose-600 shadow-sm"
-                          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                          ? "bg-rose-600 text-white border-rose-600 shadow-xs"
+                          : "bg-white text-dusty-olive-800 border-dusty-olive-200 hover:bg-dusty-olive-50"
                       }`}
                     >
                       <XCircle className="w-3.5 h-3.5 shrink-0" />
@@ -307,7 +306,7 @@ export function ReturnForm({
 
                   {/* Degradation Callout if worsened */}
                   {isDegraded && (
-                    <div className="bg-rose-50 border border-rose-200 p-2.5 rounded-lg text-xs text-rose-800 flex items-center gap-2">
+                    <div className="bg-rose-50 border border-rose-200 p-2.5 rounded-xl text-xs text-rose-900 flex items-center gap-2">
                       <AlertTriangle className="w-4 h-4 shrink-0 text-rose-600" />
                       <span>
                         Worsened from <strong>{initialItem.state}</strong> to <strong>{item.state}</strong> during reservation. Please document details below.
@@ -321,7 +320,7 @@ export function ReturnForm({
                     placeholder="Inspection remarks for this checkpoint..."
                     value={item.notes || ""}
                     onChange={(e) => handleItemNoteChange(index, e.target.value)}
-                    className="w-full text-xs px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-amber-500 transition"
+                    className="w-full text-xs px-3 py-2 rounded-xl border border-dusty-olive-200 bg-dusty-olive-50/50 text-dusty-olive-950 placeholder:text-dusty-olive-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition"
                   />
                 </div>
               </div>
@@ -331,15 +330,15 @@ export function ReturnForm({
       </div>
 
       {/* Technician Sign-off */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
-        <h4 className="font-bold text-sm text-slate-900 flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-emerald-600" />
+      <div className="rounded-2xl border border-dusty-olive-200/90 bg-white p-5 shadow-xs space-y-4">
+        <h4 className="font-bold text-sm text-dusty-olive-950 flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-celadon-700" />
           Technician Return Sign-off
         </h4>
 
         <div className="space-y-3">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label className="block text-xs font-semibold text-dusty-olive-800 mb-1">
               Return Technician / Manager Name:
             </label>
             <Input
@@ -353,14 +352,14 @@ export function ReturnForm({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label className="block text-xs font-semibold text-dusty-olive-800 mb-1">
               General Return Notes:
             </label>
             <textarea
               rows={2}
               value={overallNotes}
               onChange={(e) => setOverallNotes(e.target.value)}
-              className="w-full text-xs p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full text-xs p-3 rounded-xl border border-dusty-olive-200 text-dusty-olive-950 placeholder:text-dusty-olive-400 focus:outline-none focus:ring-2 focus:ring-celadon-600"
               placeholder="Document final return status, cleaning completed, or damage notes..."
             />
           </div>
@@ -371,10 +370,10 @@ export function ReturnForm({
       <Button
         type="submit"
         disabled={isSubmitting}
-        className={`w-full py-6 text-sm font-bold text-white shadow-md flex items-center justify-center gap-2 rounded-xl ${
+        className={`w-full py-6 text-sm font-bold text-white shadow-xs flex items-center justify-center gap-2 rounded-xl ${
           liveDiff.hasWorsened
             ? "bg-amber-600 hover:bg-amber-700"
-            : "bg-emerald-600 hover:bg-emerald-700"
+            : "bg-celadon-700 hover:bg-celadon-800"
         }`}
       >
         <Send className="w-4 h-4" />

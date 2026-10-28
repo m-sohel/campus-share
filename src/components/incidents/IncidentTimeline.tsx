@@ -133,3 +133,4 @@ export function IncidentTimeline({ events, currentStatus }: IncidentTimelineProp
     </div>
   );
 }
+

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Credential, Profile } from "@/types";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,10 +12,7 @@ import {
   XCircle,
   Clock,
   User,
-  ShieldAlert,
   AlertCircle,
-  ExternalLink,
-  Sparkles,
 } from "lucide-react";
 
 interface VerificationQueueProps {
@@ -27,7 +24,6 @@ interface VerificationQueueProps {
 export function VerificationQueue({
   initialCredentials,
   profiles,
-  currentUser,
 }: VerificationQueueProps) {
   const [credentials, setCredentials] = useState<Credential[]>(initialCredentials);
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -87,14 +83,14 @@ export function VerificationQueue({
     <div className="space-y-8">
       {message && (
         <div
-          className={`p-4 rounded-xl border text-sm flex items-start gap-2.5 ${
+          className={`p-4 rounded-2xl border text-sm flex items-start gap-2.5 shadow-xs ${
             message.type === "success"
-              ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-              : "bg-rose-50 border-rose-200 text-rose-800"
+              ? "bg-celadon-50/80 border-celadon-300 text-celadon-950"
+              : "bg-rose-50 border-rose-200 text-rose-900"
           }`}
         >
           {message.type === "success" ? (
-            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+            <CheckCircle2 className="w-5 h-5 text-celadon-700 shrink-0 mt-0.5" />
           ) : (
             <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
           )}
@@ -105,7 +101,7 @@ export function VerificationQueue({
       {/* PENDING QUEUE */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-dusty-olive-950 flex items-center gap-2">
             <Clock className="w-5 h-5 text-amber-600" />
             Pending Verification Requests ({pendingCreds.length})
           </h2>
@@ -115,10 +111,10 @@ export function VerificationQueue({
         </div>
 
         {pendingCreds.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center space-y-2">
-            <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto" />
-            <h3 className="font-bold text-slate-800 text-sm">Verification Queue Empty</h3>
-            <p className="text-xs text-slate-500">
+          <div className="rounded-2xl border border-dashed border-dusty-olive-300 bg-white p-8 text-center space-y-2">
+            <CheckCircle2 className="w-8 h-8 text-celadon-600 mx-auto" />
+            <h3 className="font-bold text-dusty-olive-950 text-sm">Verification Queue Empty</h3>
+            <p className="text-xs text-dusty-olive-500">
               All submitted student and researcher qualifications have been reviewed!
             </p>
           </div>
@@ -129,14 +125,14 @@ export function VerificationQueue({
               const isProcessing = processingId === cred.id;
 
               return (
-                <Card key={cred.id} className="border-amber-200 shadow-sm overflow-hidden">
+                <Card key={cred.id} className="border-amber-300 shadow-xs overflow-hidden">
                   <div className="bg-amber-50/60 px-6 py-2.5 border-b border-amber-200 flex flex-wrap items-center justify-between gap-2 text-xs">
                     <div className="flex items-center gap-2">
                       <User className="w-4 h-4 text-amber-700" />
-                      <span className="font-bold text-slate-900">
+                      <span className="font-bold text-dusty-olive-950">
                         {requester ? requester.full_name : "User ID: " + cred.user_id.slice(0, 8)}
                       </span>
-                      <span className="text-slate-500">
+                      <span className="text-dusty-olive-500">
                         ({requester?.email} • {requester?.department})
                       </span>
                     </div>
@@ -148,21 +144,21 @@ export function VerificationQueue({
                   <CardContent className="p-6 space-y-4 text-xs">
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <h4 className="font-bold text-sm text-slate-900">
+                        <h4 className="font-bold text-sm text-dusty-olive-950">
                           {cred.title}
                         </h4>
-                        <span className="font-mono text-slate-500 text-[11px]">
+                        <span className="font-mono text-dusty-olive-500 text-[11px]">
                           Type: {cred.credential_type}
                         </span>
                       </div>
-                      <p className="text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                      <p className="text-dusty-olive-700 bg-dusty-olive-50/60 p-3 rounded-xl border border-dusty-olive-200/80">
                         <strong>Submitted Evidence:</strong> {cred.verification_notes || "No extra notes provided."}
                       </p>
                     </div>
 
                     {/* Action Controls */}
-                    <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-3">
-                      <label className="text-[11px] font-semibold text-slate-700 block">
+                    <div className="p-4 rounded-2xl border border-dusty-olive-200/90 bg-dusty-olive-50/50 space-y-3">
+                      <label className="text-[11px] font-semibold text-dusty-olive-800 block">
                         Reason / Review Explanation (Mandatory for audit log):
                       </label>
                       <Input
@@ -181,7 +177,7 @@ export function VerificationQueue({
                           size="sm"
                           disabled={isProcessing}
                           onClick={() => handleDecision(cred.id, "reject")}
-                          className="text-xs font-semibold gap-1.5"
+                          className="text-xs font-semibold gap-1.5 shadow-xs"
                         >
                           <XCircle className="w-3.5 h-3.5" />
                           Reject Request
@@ -193,10 +189,10 @@ export function VerificationQueue({
                           size="sm"
                           disabled={isProcessing}
                           onClick={() => handleDecision(cred.id, "approve")}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold gap-1.5"
+                          className="bg-celadon-700 hover:bg-celadon-800 text-white text-xs font-semibold gap-1.5 shadow-xs"
                         >
                           <CheckCircle2 className="w-3.5 h-3.5" />
-                          Approve & Grant Clearance
+                          Approve &amp; Grant Clearance
                         </Button>
                       </div>
                     </div>
@@ -209,35 +205,35 @@ export function VerificationQueue({
       </div>
 
       {/* RECENTLY VERIFIED HISTORY */}
-      <div className="space-y-4 pt-4 border-t border-slate-200">
-        <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-          <FileCheck className="w-5 h-5 text-indigo-600" />
-          Verified & Historical Credentials ({reviewedCreds.length})
+      <div className="space-y-4 pt-4 border-t border-dusty-olive-200">
+        <h3 className="text-lg font-bold text-dusty-olive-950 flex items-center gap-2">
+          <FileCheck className="w-5 h-5 text-celadon-700" />
+          Verified &amp; Historical Credentials ({reviewedCreds.length})
         </h3>
 
-        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-          <table className="w-full text-left text-xs text-slate-700">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider text-[10px]">
+        <div className="overflow-x-auto rounded-2xl border border-dusty-olive-200/90 bg-white shadow-xs">
+          <table className="w-full text-left text-xs text-dusty-olive-800">
+            <thead className="bg-dusty-olive-50/80 border-b border-dusty-olive-200 text-dusty-olive-600 uppercase tracking-wider text-[10px]">
               <tr>
                 <th className="p-3">User</th>
                 <th className="p-3">Credential</th>
                 <th className="p-3">Status</th>
                 <th className="p-3">Issued / Expiry</th>
-                <th className="p-3">Notes & Reason</th>
+                <th className="p-3">Notes &amp; Reason</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200">
+            <tbody className="divide-y divide-dusty-olive-100">
               {reviewedCreds.map((c) => {
                 const requester = profiles.find((p) => p.id === c.user_id);
                 return (
-                  <tr key={c.id} className="hover:bg-slate-50/60">
+                  <tr key={c.id} className="hover:bg-dusty-olive-50/60 transition">
                     <td className="p-3">
-                      <span className="font-semibold text-slate-900 block">
+                      <span className="font-semibold text-dusty-olive-950 block">
                         {requester?.full_name || c.user_id.slice(0, 8)}
                       </span>
-                      <span className="text-[11px] text-slate-500">{requester?.email}</span>
+                      <span className="text-[11px] text-dusty-olive-500">{requester?.email}</span>
                     </td>
-                    <td className="p-3 font-medium text-slate-900">
+                    <td className="p-3 font-medium text-dusty-olive-950">
                       {c.title}
                     </td>
                     <td className="p-3">
@@ -254,11 +250,11 @@ export function VerificationQueue({
                         {c.status}
                       </Badge>
                     </td>
-                    <td className="p-3 text-[11px] text-slate-500">
+                    <td className="p-3 text-[11px] text-dusty-olive-500">
                       <div>Issued: {new Date(c.issued_at).toLocaleDateString()}</div>
                       {c.expires_at && <div>Exp: {new Date(c.expires_at).toLocaleDateString()}</div>}
                     </td>
-                    <td className="p-3 text-[11px] text-slate-600 max-w-xs truncate">
+                    <td className="p-3 text-[11px] text-dusty-olive-600 max-w-xs truncate">
                       {c.verification_notes || "—"}
                     </td>
                   </tr>
@@ -271,4 +267,3 @@ export function VerificationQueue({
     </div>
   );
 }
-

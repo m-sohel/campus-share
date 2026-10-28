@@ -319,3 +319,4 @@ export function getAdminResolutionLabel(resolution: string): { label: string; ex
       return { label: resolution, explanation: "Campus Governance binding arbitration completed." };
   }
 }
+

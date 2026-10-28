@@ -28,20 +28,20 @@ export default async function CredentialVerificationPage() {
       <div>
         <Link
           href={`/dashboard/${currentUser.role}`}
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition mb-3"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-dusty-olive-600 hover:text-dusty-olive-950 transition mb-3"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Back to Dashboard
         </Link>
-        <div className="flex items-center gap-2">
-          <div className="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+        <div className="flex items-center gap-3">
+          <div className="h-12 w-12 rounded-2xl bg-soft-celadon-100 border border-soft-celadon-200 flex items-center justify-center text-celadon-700 shadow-xs">
             <FileCheck className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-dusty-olive-950 tracking-tight">
               Safety Credential Verification Queue
             </h1>
-            <p className="text-xs sm:text-sm text-slate-600">
+            <p className="text-xs sm:text-sm text-dusty-olive-600 mt-0.5">
               Review and sign off on equipment certifications, laser safety clearances, and training requests.
             </p>
           </div>
@@ -56,4 +56,3 @@ export default async function CredentialVerificationPage() {
     </div>
   );
 }
-

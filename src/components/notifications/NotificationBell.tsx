@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Notification } from "@/types";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Bell,
   CheckCircle2,
@@ -91,14 +90,14 @@ export function NotificationBell({ initialCount = 0 }: NotificationBellProps) {
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case "action_required":
-        return <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />;
+        return <AlertTriangle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />;
       case "success":
-        return <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />;
+        return <CheckCircle2 className="w-4 h-4 text-celadon-700 shrink-0 mt-0.5" />;
       case "warning":
-        return <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />;
+        return <ShieldAlert className="w-4 h-4 text-rose-700 shrink-0 mt-0.5" />;
       case "info":
       default:
-        return <Info className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />;
+        return <Info className="w-4 h-4 text-muted-teal-700 shrink-0 mt-0.5" />;
     }
   };
 
@@ -108,13 +107,13 @@ export function NotificationBell({ initialCount = 0 }: NotificationBellProps) {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        className="relative p-2 rounded-lg text-dusty-olive-700 hover:text-dusty-olive-950 hover:bg-dusty-olive-100/60 transition-colors focus:outline-none focus:ring-2 focus:ring-celadon-600 cursor-pointer"
         aria-label="Notifications"
         title="Open Notification Centre"
       >
-        <Bell className="w-5 h-5" />
+        <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 h-4 w-4 rounded-full bg-rose-600 text-[10px] font-bold text-white flex items-center justify-center animate-pulse">
+          <span className="absolute top-1 right-1 h-4 w-4 rounded-full bg-rose-600 text-[9px] font-bold text-white flex items-center justify-center animate-pulse">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -122,11 +121,11 @@ export function NotificationBell({ initialCount = 0 }: NotificationBellProps) {
 
       {/* Popover Dropdown Panel */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-white border border-slate-200 shadow-xl z-50 overflow-hidden text-left animate-in fade-in slide-in-from-top-2 duration-150">
+        <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-white border border-dusty-olive-200/90 shadow-xl z-50 overflow-hidden text-left animate-in fade-in slide-in-from-top-2 duration-150">
           {/* Header */}
-          <div className="p-3.5 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+          <div className="p-3.5 border-b border-dusty-olive-200/60 bg-dusty-olive-50/80 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-sm text-slate-900">Notifications</span>
+              <span className="font-bold text-sm text-dusty-olive-950">Notifications</span>
               {unreadCount > 0 && (
                 <Badge variant="destructive" className="text-[10px] h-5 px-1.5 font-bold">
                   {unreadCount} unread
@@ -138,7 +137,7 @@ export function NotificationBell({ initialCount = 0 }: NotificationBellProps) {
               <button
                 type="button"
                 onClick={handleMarkAllAsRead}
-                className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 hover:underline"
+                className="text-[11px] font-semibold text-celadon-800 hover:text-celadon-950 flex items-center gap-1 hover:underline cursor-pointer"
               >
                 <Check className="w-3 h-3" /> Mark all read
               </button>
@@ -146,28 +145,28 @@ export function NotificationBell({ initialCount = 0 }: NotificationBellProps) {
           </div>
 
           {/* List */}
-          <div className="max-h-96 overflow-y-auto divide-y divide-slate-100">
+          <div className="max-h-96 overflow-y-auto divide-y divide-dusty-olive-100">
             {isLoading && notifications.length === 0 ? (
-              <div className="p-6 text-center text-xs text-slate-400">Loading notifications...</div>
+              <div className="p-6 text-center text-xs text-dusty-olive-400">Loading notifications...</div>
             ) : notifications.length === 0 ? (
-              <div className="p-8 text-center text-xs text-slate-500 space-y-1">
-                <CheckCircle2 className="w-6 h-6 text-emerald-500 mx-auto mb-1" />
-                <p className="font-semibold text-slate-700">All caught up!</p>
-                <p className="text-[11px] text-slate-400">No unread notifications at this time.</p>
+              <div className="p-8 text-center text-xs text-dusty-olive-600 space-y-1">
+                <CheckCircle2 className="w-6 h-6 text-celadon-600 mx-auto mb-1" />
+                <p className="font-bold text-dusty-olive-900">All caught up!</p>
+                <p className="text-[11px] text-dusty-olive-500">No unread notifications at this time.</p>
               </div>
             ) : (
               notifications.map((n) => (
                 <div
                   key={n.id}
-                  className={`p-3.5 transition flex items-start gap-3 ${
-                    !n.is_read ? "bg-indigo-50/40 hover:bg-indigo-50/70" : "bg-white hover:bg-slate-50"
+                  className={`p-3.5 transition-colors flex items-start gap-3 ${
+                    !n.is_read ? "bg-soft-celadon-50/60 hover:bg-soft-celadon-100/70" : "bg-white hover:bg-dusty-olive-50/50"
                   }`}
                 >
                   {getNotificationIcon(n.type)}
 
                   <div className="flex-1 min-w-0 space-y-1">
                     <div className="flex items-start justify-between gap-1">
-                      <h4 className="text-xs font-bold text-slate-900 leading-snug">
+                      <h4 className="text-xs font-bold text-dusty-olive-950 leading-snug">
                         {n.title}
                       </h4>
                       {!n.is_read && (
@@ -175,14 +174,14 @@ export function NotificationBell({ initialCount = 0 }: NotificationBellProps) {
                           type="button"
                           onClick={(e) => handleMarkAsRead(n.id, e)}
                           title="Mark as read"
-                          className="text-[10px] text-indigo-600 hover:text-indigo-800 font-semibold shrink-0"
+                          className="text-[10px] text-celadon-800 hover:text-celadon-950 font-semibold shrink-0 cursor-pointer"
                         >
                           Read
                         </button>
                       )}
                     </div>
 
-                    <p className="text-xs text-slate-600 leading-relaxed">
+                    <p className="text-xs text-dusty-olive-700 leading-relaxed">
                       {n.message}
                     </p>
 
@@ -191,7 +190,7 @@ export function NotificationBell({ initialCount = 0 }: NotificationBellProps) {
                         <Link
                           href={n.action_url}
                           onClick={() => setIsOpen(false)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px] shadow-xs"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-rose-700 hover:bg-rose-800 text-white font-bold text-[10px] shadow-xs"
                         >
                           <ShieldAlert className="w-3 h-3" />
                           {n.action_label}
@@ -200,7 +199,7 @@ export function NotificationBell({ initialCount = 0 }: NotificationBellProps) {
                     )}
 
                     <div className="flex items-center justify-between pt-1">
-                      <span className="text-[10px] text-slate-400 font-mono">
+                      <span className="text-[10px] text-dusty-olive-400 font-mono">
                         {new Date(n.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                       </span>
 
@@ -208,7 +207,7 @@ export function NotificationBell({ initialCount = 0 }: NotificationBellProps) {
                         <Link
                           href={n.link}
                           onClick={() => setIsOpen(false)}
-                          className="text-[11px] font-semibold text-indigo-600 hover:underline flex items-center gap-1"
+                          className="text-[11px] font-semibold text-celadon-800 hover:underline flex items-center gap-1"
                         >
                           View <ExternalLink className="w-3 h-3" />
                         </Link>
@@ -224,4 +223,3 @@ export function NotificationBell({ initialCount = 0 }: NotificationBellProps) {
     </div>
   );
 }
-

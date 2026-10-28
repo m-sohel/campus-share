@@ -8,14 +8,21 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          "border-transparent bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300",
+          "border-soft-celadon-200 bg-soft-celadon-100 text-soft-celadon-900",
         secondary:
-          "border-transparent bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100",
+          "border-dusty-olive-200 bg-dusty-olive-100 text-dusty-olive-900",
         destructive:
-          "border-transparent bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300",
-        outline: "text-slate-950 dark:text-slate-50 border-slate-300 dark:border-slate-700",
-        success: "border-transparent bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
-        warning: "border-transparent bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
+          "border-rose-200 bg-rose-50 text-rose-800",
+        outline:
+          "text-dusty-olive-900 border-dusty-olive-300 bg-white/80",
+        success:
+          "border-celadon-200 bg-celadon-100 text-celadon-900",
+        warning:
+          "border-amber-200 bg-amber-50 text-amber-900",
+        accent:
+          "border-tea-green-300 bg-tea-green-100 text-tea-green-950 font-bold",
+        teal:
+          "border-muted-teal-200 bg-muted-teal-100 text-muted-teal-900",
       },
     },
     defaultVariants: {
@@ -35,4 +42,3 @@ function Badge({ className, variant, ...props }: BadgeProps) {
 }
 
 export { Badge, badgeVariants };
-

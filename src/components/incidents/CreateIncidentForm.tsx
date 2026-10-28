@@ -207,3 +207,4 @@ export function CreateIncidentForm({
     </Card>
   );
 }
+

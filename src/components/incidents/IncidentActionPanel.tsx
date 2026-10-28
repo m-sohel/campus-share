@@ -536,3 +536,4 @@ export function IncidentActionPanel({
     </div>
   );
 }
+

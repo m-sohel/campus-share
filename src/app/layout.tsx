@@ -35,7 +35,7 @@ export default async function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-slate-50 text-slate-900 font-sans">
+      <body className="min-h-full flex flex-col bg-dusty-olive-50/50 text-dusty-olive-950 font-sans selection:bg-tea-green-200 selection:text-tea-green-950">
         <Navbar currentUser={currentUser} />
         <main className="flex-1">{children}</main>
         <Footer />

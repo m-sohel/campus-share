@@ -6,25 +6,14 @@ import { useRouter } from "next/navigation";
 import { Profile } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Award,
   Sparkles,
   RotateCcw,
-  User,
   ShieldCheck,
   CheckCircle2,
   ArrowRight,
-  ExternalLink,
-  Layers,
-  Wrench,
-  Clock,
-  ClipboardCheck,
-  ShieldAlert,
-  History,
   Check,
-  Copy,
-  AlertTriangle,
 } from "lucide-react";
 import { DemoClockControl } from "@/components/clock/DemoClockControl";
 
@@ -38,35 +27,30 @@ const PERSONAS = [
     name: "Prof. Elena Rostova",
     email: "owner.lab@campusshare.edu",
     desc: "Resource Owner • University Central Engineering Lab",
-    color: "from-blue-600 to-indigo-700",
   },
   {
     role: "manager",
     name: "Jordan Taylor",
     email: "manager.tech@campusshare.edu",
     desc: "Technician / Manager • Community Makerspace Desk",
-    color: "from-amber-600 to-amber-800",
   },
   {
     role: "user",
     name: "Sarah Jenkins",
     email: "user.researcher@campusshare.edu",
     desc: "Borrower (Researcher) • Certified in Laser Safety L2",
-    color: "from-emerald-600 to-teal-700",
   },
   {
     role: "user",
     name: "David Kim",
     email: "user.startup@campusshare.edu",
     desc: "Borrower (Startup Founder) • High-Speed Prototyping",
-    color: "from-indigo-600 to-purple-700",
   },
   {
     role: "admin",
     name: "System Administrator",
     email: "admin@campusshare.edu",
     desc: "Platform Admin • Safety Council & Audit Chain Governance",
-    color: "from-rose-700 to-slate-900",
   },
 ];
 
@@ -98,103 +82,103 @@ const LIFECYCLE_STEPS: ScriptStep[] = [
   },
   {
     step: 2,
-    title: "Discovery & Instant Eligibility Evaluation",
-    roleName: "Sarah Jenkins (Borrower)",
+    title: "Discovery & Instant Pre-Flight Eligibility Engine",
+    roleName: "Sarah Jenkins (Researcher)",
     roleType: "user",
     targetEmail: "user.researcher@campusshare.edu",
     linkUrl: "/",
-    linkLabel: "Open Catalog & Discovery",
-    actionText: "Toggle the 'I'm eligible for this' filter. Open the Epilog Laser Cutter listing to see the live requirement breakdown.",
-    observationText: "Sarah Jenkins passes because her Laser Safety Officer L2 certificate is on file and active.",
-    principleText: "Every access decision explains WHY with plain-language reasons and actionable fix steps.",
+    linkLabel: "Open Equipment Catalog",
+    actionText: "Use the 'I am eligible for this' filter. Click into the Class 4 Laser Cutter to observe real-time evaluation against Sarah's verified credentials.",
+    observationText: "System provides plain-language reasons and immediate fix instructions for missing prerequisites.",
+    principleText: "Eligibility is checked upfront so borrowers never submit unviable booking requests.",
   },
   {
     step: 3,
-    title: "Reservation Request Submission",
-    roleName: "Sarah Jenkins (Borrower)",
+    title: "Booking Request with Purpose & Fairness Scoring",
+    roleName: "David Kim (Startup Founder)",
     roleType: "user",
-    targetEmail: "user.researcher@campusshare.edu",
-    linkUrl: "/dashboard/user",
-    linkLabel: "View User Reservations & Passes",
-    actionText: "Observe Sarah's approved laser reservation (#b-approved-laser) and pending requests in her dashboard.",
-    observationText: "Displays reservation window, borrower reputation score (95/100), and automated fairness score (9.2/10).",
-    principleText: "Fair allocation scoring prioritizes researchers and prevents monopolization.",
+    targetEmail: "user.startup@campusshare.edu",
+    linkUrl: "/resources/res-laser-01",
+    linkLabel: "Open Laser Station Page",
+    actionText: "Inspect the required slot selection and booking purpose field. Review the computed fairness weight and queue standing.",
+    observationText: "Fair allocation policies evaluate booking frequency to avoid lab monopolization.",
+    principleText: "Equipment is allocated transparently through verifiable need and fair-share rotation.",
   },
   {
     step: 4,
-    title: "Automated Requirement Verification Engine",
-    roleName: "Automated Engine / Sarah Jenkins",
-    roleType: "user",
-    targetEmail: "user.researcher@campusshare.edu",
+    title: "System Pre-Flight Verification & Eligibility Pass",
+    roleName: "Automated Rules Engine",
+    roleType: "system",
+    targetEmail: "admin@campusshare.edu",
     linkUrl: "/dashboard/user",
-    linkLabel: "Inspect Eligibility Matrix",
-    actionText: "Scroll down to 'Resource Eligibility Matrix' to review the per-requirement pass/fail/expired evaluation across all 8 resources.",
-    observationText: "Resources with missing prerequisites provide direct 1-click links to 'Get Certified' (/credentials/request).",
-    principleText: "Zero unexplained rejections. Users always see how to achieve clearance.",
+    linkLabel: "Open Eligibility Matrix",
+    actionText: "View the user dashboard's Resource Eligibility Matrix to confirm automated verification without human bottlenecks.",
+    observationText: "Valid safety credentials and insurance records verify instantly without administrative delay.",
+    principleText: "Automate prerequisite verification to save institutional staff hours of manual paperwork.",
   },
   {
     step: 5,
-    title: "Owner & Manager Request Review Queue",
+    title: "Owner / Delegated Technician Review",
     roleName: "Prof. Elena Rostova (Owner)",
     roleType: "owner",
     targetEmail: "owner.lab@campusshare.edu",
     linkUrl: "/dashboard/owner",
-    linkLabel: "Open Owner Review Queue",
-    actionText: "View the 'Pending Approvals' section showing Sarah Jenkins' cleanroom lithography request (#b-pending-review-cleanroom).",
-    observationText: "Owner sees applicant reputation, project purpose, and fairness score before deciding.",
-    principleText: "AI and scoring engines only assist; humans make the final access decisions.",
+    linkLabel: "Open Owner Desk",
+    actionText: "Review incoming requests in the Pending Approvals queue. Inspect applicant reputation and proposed research usage.",
+    observationText: "Full context is surfaced in a single card, including borrower reputation score and fairness score.",
+    principleText: "Facility custodians retain ultimate authority over high-value capital assets.",
   },
   {
     step: 6,
-    title: "Approve, Reject, or Waitlist with Audit Reason",
+    title: "Approve, Reject, or Priority Waitlist",
     roleName: "Prof. Elena Rostova (Owner)",
     roleType: "owner",
     targetEmail: "owner.lab@campusshare.edu",
     linkUrl: "/dashboard/owner",
-    linkLabel: "Review Pending Booking",
-    actionText: "On booking #b-pending-review-cleanroom, click 'Approve', enter an audit explanation (or leave default), and submit.",
-    observationText: "Booking transitions to approved immediately and writes an immutable SHA-256 event to the audit trail.",
-    principleText: "Every status transition requires a human explanation logged to the tamper-evident record.",
+    linkLabel: "Decide Pending Booking",
+    actionText: "Click 'Approve' on Sarah's laser cutter request. Supply a brief plain-language explanation for the audit log.",
+    observationText: "Decision writes to the immutable audit trail and triggers an instant in-app notification to the borrower.",
+    principleText: "Every access decision requires human accountability and leaves a permanent record.",
   },
   {
     step: 7,
-    title: "Physical Check-in & Handover (QR Pass)",
-    roleName: "Jordan Taylor (Makerspace Technician)",
+    title: "Physical Handover & Mobile Check-in Checklist",
+    roleName: "Jordan Taylor (Technician)",
     roleType: "manager",
     targetEmail: "manager.tech@campusshare.edu",
-    linkUrl: "/bookings/b-approved-laser/check-in",
-    linkLabel: "Execute Step 7 Check-in",
-    actionText: "Inspect checkpoints (clean bed, optics, interlocks). Sign off physical handover. Status becomes 'In Use'.",
-    observationText: "Borrowers can also show their scannable digital QR pass on /bookings/b-approved-laser at the facility desk.",
-    principleText: "Mobile-first inspection locks in baseline condition before borrower takes custody.",
+    linkUrl: "/bookings",
+    linkLabel: "Open Handover Desk",
+    actionText: "Click 'Check-in' on an approved reservation. Complete each physical checkpoint inspection (OK / Minor / Damaged).",
+    observationText: "Status moves to 'In Use' and creates an immutable initial condition baseline.",
+    principleText: "Handover baseline protects both owner and borrower from unfounded liability.",
   },
   {
     step: 8,
-    title: "Post-Session Return & Condition Diff Inspection",
-    roleName: "Jordan Taylor (Makerspace Technician)",
+    title: "Return Inspection & Pure Condition Diff",
+    roleName: "Jordan Taylor (Technician)",
     roleType: "manager",
     targetEmail: "manager.tech@campusshare.edu",
-    linkUrl: "/bookings/b-in-use-scope/return",
-    linkLabel: "Execute Step 8 Return",
-    actionText: "Inspect returning Keysight Oscilloscope. Mark item #1 ('Power and interface cords functional') as 'Damaged' or 'Minor Issue'.",
-    observationText: "Notice the live degradation alert: 'Degradation Flagged: Draft Incident will be created'. Also notes late return (+30m).",
-    principleText: "Side-by-side comparison highlights exactly what changed during custody.",
+    linkUrl: "/bookings",
+    linkLabel: "Open Return Desk",
+    actionText: "Select an active booking. Record return inspection with 1 item marked 'Damaged' or 'Minor Issue'.",
+    observationText: "Side-by-side condition diff highlights degradation and auto-drafts an incident in Draft status.",
+    principleText: "Zero automated penalties: algorithms identify variances; humans adjudicate findings.",
   },
   {
     step: 9,
-    title: "Incident Governance & Audited Dispute Resolution",
-    roleName: "Jordan Taylor (Manager) / Lucas Wright (User) / Dr. Vance (Admin)",
+    title: "Incident Adjudication & Dispute Due Process",
+    roleName: "Jordan Taylor & Admin",
     roleType: "manager",
     targetEmail: "manager.tech@campusshare.edu",
-    linkUrl: "/incidents/inc-seed-drone-01",
-    linkLabel: "Inspect Incident #inc-seed-drone-01",
-    actionText: "Follow the 5-step accountability flow: 1. Manager opens draft -> 2. Switch to Lucas Wright & submit response statement -> 3. Switch to Jordan & record finding -> 4. Switch to Lucas & dispute -> 5. Switch to Dr. Vance & issue binding arbitration.",
-    observationText: "Notice the tamper-evident visual timeline, plain-language decision explanations, and zero automated penalties at every step.",
-    principleText: "AI and algorithms only assist; human participants and administrators decide and retain full accountability.",
+    linkUrl: "/incidents",
+    linkLabel: "Open Incident Governance Desk",
+    actionText: "Inspect the auto-drafted incident. Note how the borrower can respond with their perspective before any finding is recorded.",
+    observationText: "Multi-party timeline documents statements, decisions, and administrative arbitration appeals.",
+    principleText: "Restorative justice and due process prevent toxic campus disputes.",
   },
   {
     step: 10,
-    title: "Cryptographic Audit Trail & Historical Record",
+    title: "Cryptographic SHA-256 Audit Chain Verification",
     roleName: "System Administrator",
     roleType: "admin",
     targetEmail: "admin@campusshare.edu",
@@ -269,30 +253,30 @@ export function JudgeConsole({ initialUser }: JudgeConsoleProps) {
   return (
     <div className="space-y-8">
       {/* Hero Banner */}
-      <div className="rounded-3xl bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950 text-white p-6 sm:p-10 shadow-xl border border-indigo-900/50 relative overflow-hidden">
+      <div className="rounded-3xl bg-gradient-to-br from-dusty-olive-950 via-soft-celadon-950 to-muted-teal-950 text-white p-6 sm:p-10 shadow-xl border border-celadon-800/40 relative overflow-hidden">
         <div className="relative z-10 space-y-4 max-w-4xl">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge className="bg-amber-400 text-slate-950 font-bold uppercase text-[10px] tracking-wider border-0 flex items-center gap-1">
+            <Badge className="bg-tea-green-400 text-dusty-olive-950 font-bold uppercase text-[10px] tracking-wider border-0 flex items-center gap-1">
               <Award className="w-3.5 h-3.5" /> Hackathon Judge Console
             </Badge>
-            <Badge variant="outline" className="text-indigo-200 border-indigo-700 text-[10px]">
+            <Badge variant="outline" className="text-tea-green-200 border-tea-green-800 text-[10px]">
               Target: 5-Minute Evaluation
             </Badge>
-            <span className="text-xs text-slate-400">• Higher Ed & Makerspace Trust Network</span>
+            <span className="text-xs text-dusty-olive-300">• Higher Ed &amp; Makerspace Trust Network</span>
           </div>
 
           <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight leading-tight">
-            Campus<span className="text-indigo-400">Share</span>: 10-Step Lifecycle Script
+            Campus<span className="text-tea-green-400">Share</span>: 10-Step Lifecycle Script
           </h1>
 
-          <p className="text-slate-300 text-xs sm:text-sm leading-relaxed max-w-3xl">
+          <p className="text-dusty-olive-200 text-xs sm:text-sm leading-relaxed max-w-3xl">
             Universities own millions of dollars of underused resources (laser cutters, oscilloscopes, cinema cameras, cleanrooms). CampusShare solves the trust deficit with verified credentials, physical condition diffing, zero automated penalties, and SHA-256 cryptographic audit logs. Follow this interactive script to complete the entire journey without any assistance.
           </p>
 
           {/* Active Session Indicator */}
           <div className="pt-2 flex flex-wrap items-center gap-3">
-            <div className="rounded-xl bg-white/10 backdrop-blur px-4 py-2 border border-white/15 flex items-center gap-2.5 text-xs">
-              <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse" />
+            <div className="rounded-2xl bg-white/10 backdrop-blur px-4 py-2 border border-white/15 flex items-center gap-2.5 text-xs">
+              <span className="h-2.5 w-2.5 rounded-full bg-celadon-400 animate-pulse" />
               <span>Currently Acting As:</span>
               <strong className="text-white">
                 {currentUser ? `${currentUser.full_name} (${currentUser.role.toUpperCase()})` : "Not signed in"}
@@ -305,7 +289,7 @@ export function JudgeConsole({ initialUser }: JudgeConsoleProps) {
               size="sm"
               onClick={handleResetData}
               disabled={isResetting}
-              className="bg-white/10 hover:bg-white/20 text-white border-white/20 text-xs h-9 gap-1.5 shadow-sm"
+              className="bg-white/10 hover:bg-white/20 text-white border-white/20 text-xs h-9 gap-1.5 shadow-xs"
             >
               <RotateCcw className={`w-3.5 h-3.5 ${isResetting ? "animate-spin" : ""}`} />
               {isResetting ? "Resetting Demo..." : "Reset Demo Data"}
@@ -313,8 +297,8 @@ export function JudgeConsole({ initialUser }: JudgeConsoleProps) {
           </div>
 
           {resetMessage && (
-            <div className="rounded-xl border border-emerald-400 bg-emerald-950/60 p-3 text-xs text-emerald-200 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <div className="rounded-2xl border border-celadon-400 bg-celadon-950/70 p-3 text-xs text-celadon-200 flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-celadon-400 shrink-0" />
               <span>{resetMessage}</span>
             </div>
           )}
@@ -324,10 +308,10 @@ export function JudgeConsole({ initialUser }: JudgeConsoleProps) {
       {/* Simulated Demo Clock Section */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+          <span className="text-xs font-bold text-dusty-olive-600 uppercase tracking-wider">
             Stage 8 Time-Based Flows &amp; Overdue Simulation
           </span>
-          <span className="text-[11px] text-slate-400">
+          <span className="text-[11px] text-dusty-olive-500">
             Fast-forward time to trigger overdue alerts &amp; booking reminders
           </span>
         </div>
@@ -338,15 +322,15 @@ export function JudgeConsole({ initialUser }: JudgeConsoleProps) {
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
           <div>
-            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-indigo-600" />
+            <h2 className="text-xl font-bold text-dusty-olive-950 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-celadon-700" />
               One-Click Role Switcher
             </h2>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-dusty-olive-600">
               Instant login as any seeded persona with zero passwords required.
             </p>
           </div>
-          <span className="text-xs text-slate-400 font-mono">Session sets instant auth cookie</span>
+          <span className="text-xs text-dusty-olive-400 font-mono">Session sets instant auth cookie</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
@@ -362,8 +346,8 @@ export function JudgeConsole({ initialUser }: JudgeConsoleProps) {
                 disabled={isPending}
                 className={`p-4 rounded-2xl border text-left transition relative flex flex-col justify-between space-y-3 ${
                   isActive
-                    ? "border-indigo-600 bg-indigo-50/80 shadow-md ring-2 ring-indigo-500/20"
-                    : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm"
+                    ? "border-celadon-600 bg-celadon-50/70 shadow-xs ring-2 ring-celadon-600/20"
+                    : "border-dusty-olive-200/90 bg-white hover:border-celadon-300 hover:shadow-xs"
                 }`}
               >
                 <div className="space-y-1.5">
@@ -383,15 +367,15 @@ export function JudgeConsole({ initialUser }: JudgeConsoleProps) {
                       {p.role}
                     </Badge>
                     {isActive && (
-                      <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block" title="Active persona" />
+                      <span className="h-2 w-2 rounded-full bg-celadon-600 inline-block" title="Active persona" />
                     )}
                   </div>
-                  <h4 className="font-bold text-sm text-slate-900 leading-snug">{p.name}</h4>
-                  <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">{p.desc}</p>
+                  <h4 className="font-bold text-sm text-dusty-olive-950 leading-snug">{p.name}</h4>
+                  <p className="text-[11px] text-dusty-olive-500 line-clamp-2 leading-relaxed">{p.desc}</p>
                 </div>
 
-                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-                  <span className={`font-semibold ${isActive ? "text-indigo-700" : "text-slate-600"}`}>
+                <div className="pt-2 border-t border-dusty-olive-100 flex items-center justify-between text-xs">
+                  <span className={`font-semibold ${isActive ? "text-celadon-800" : "text-dusty-olive-600"}`}>
                     {isActive ? "Active Now ✓" : isPending ? "Switching..." : "Log in as →"}
                   </span>
                 </div>
@@ -402,19 +386,19 @@ export function JudgeConsole({ initialUser }: JudgeConsoleProps) {
       </div>
 
       {/* Script Progress Header */}
-      <div className="p-4 rounded-2xl border border-slate-200 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+      <div className="p-4 rounded-2xl border border-dusty-olive-200/90 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
         <div>
-          <h3 className="font-bold text-sm text-slate-900">
+          <h3 className="font-bold text-sm text-dusty-olive-950">
             Lifecycle Tour Progress: {completedSteps.length} of 10 Steps Complete
           </h3>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-dusty-olive-500 mt-0.5">
             Click checkboxes to track your test run or click deep links to execute each step.
           </p>
         </div>
 
-        <div className="w-full sm:w-48 h-2 rounded-full bg-slate-100 overflow-hidden">
+        <div className="w-full sm:w-48 h-2.5 rounded-full bg-dusty-olive-100 overflow-hidden">
           <div
-            className="h-full bg-indigo-600 transition-all duration-300 rounded-full"
+            className="h-full bg-celadon-700 transition-all duration-300 rounded-full"
             style={{ width: `${(completedSteps.length / 10) * 100}%` }}
           />
         </div>
@@ -429,21 +413,21 @@ export function JudgeConsole({ initialUser }: JudgeConsoleProps) {
           return (
             <div
               key={s.step}
-              className={`rounded-2xl border transition p-5 shadow-sm space-y-4 ${
+              className={`rounded-2xl border transition p-5 shadow-xs space-y-4 ${
                 isDone
-                  ? "border-emerald-300 bg-emerald-50/30"
-                  : "border-slate-200 bg-white hover:border-slate-300"
+                  ? "border-celadon-300 bg-celadon-50/40"
+                  : "border-dusty-olive-200/90 bg-white hover:border-celadon-300"
               }`}
             >
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 pb-3 border-b border-slate-100">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 pb-3 border-b border-dusty-olive-100">
                 <div className="flex items-start gap-3">
                   <button
                     type="button"
                     onClick={() => toggleStepCompleted(s.step)}
                     className={`h-7 w-7 rounded-lg text-xs font-bold shrink-0 flex items-center justify-center transition border ${
                       isDone
-                        ? "bg-emerald-600 text-white border-emerald-600"
-                        : "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200"
+                        ? "bg-celadon-700 text-white border-celadon-700"
+                        : "bg-dusty-olive-100 text-dusty-olive-700 border-dusty-olive-200 hover:bg-dusty-olive-200"
                     }`}
                     title={isDone ? "Mark as incomplete" : "Mark as completed"}
                   >
@@ -452,7 +436,7 @@ export function JudgeConsole({ initialUser }: JudgeConsoleProps) {
 
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="font-bold text-base text-slate-900 leading-snug">
+                      <h3 className="font-bold text-base text-dusty-olive-950 leading-snug">
                         Step {s.step}: {s.title}
                       </h3>
                       {isDone && (
@@ -462,18 +446,18 @@ export function JudgeConsole({ initialUser }: JudgeConsoleProps) {
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
+                    <div className="flex items-center gap-2 mt-1 text-xs text-dusty-olive-500">
                       <span>Persona:</span>
-                      <strong className="text-slate-800">{s.roleName}</strong>
+                      <strong className="text-dusty-olive-900">{s.roleName}</strong>
                       {isUserMatching ? (
-                        <span className="text-[11px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                        <span className="text-[11px] text-celadon-800 font-semibold bg-celadon-50 px-2 py-0.5 rounded border border-celadon-200">
                           Active Persona
                         </span>
                       ) : (
                         <button
                           type="button"
                           onClick={() => handleSwitchPersona(s.targetEmail)}
-                          className="text-[11px] text-indigo-600 hover:underline font-semibold"
+                          className="text-[11px] text-celadon-800 hover:underline font-semibold"
                         >
                           (Switch to {s.roleType} now)
                         </button>
@@ -486,7 +470,7 @@ export function JudgeConsole({ initialUser }: JudgeConsoleProps) {
                   <Link href={s.linkUrl}>
                     <Button
                       size="sm"
-                      className="h-8 text-xs bg-indigo-600 hover:bg-indigo-700 text-white gap-1.5 shadow-sm font-semibold"
+                      className="h-8 text-xs bg-celadon-700 hover:bg-celadon-800 text-white gap-1.5 shadow-xs font-semibold"
                     >
                       {s.linkLabel}
                       <ArrowRight className="w-3.5 h-3.5" />
@@ -497,26 +481,26 @@ export function JudgeConsole({ initialUser }: JudgeConsoleProps) {
 
               {/* Instructions & Observations Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                <div className="space-y-1 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                  <span className="font-bold text-slate-900 flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-indigo-600 inline-block" />
+                <div className="space-y-1 bg-dusty-olive-50/60 p-3 rounded-xl border border-dusty-olive-200/60">
+                  <span className="font-bold text-dusty-olive-950 flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-celadon-700 inline-block" />
                     What to Do:
                   </span>
-                  <p className="text-slate-700 leading-relaxed">{s.actionText}</p>
+                  <p className="text-dusty-olive-700 leading-relaxed">{s.actionText}</p>
                 </div>
 
-                <div className="space-y-1 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                  <span className="font-bold text-slate-900 flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 inline-block" />
+                <div className="space-y-1 bg-dusty-olive-50/60 p-3 rounded-xl border border-dusty-olive-200/60">
+                  <span className="font-bold text-dusty-olive-950 flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-muted-teal-700 inline-block" />
                     What to Observe:
                   </span>
-                  <p className="text-slate-700 leading-relaxed">{s.observationText}</p>
+                  <p className="text-dusty-olive-700 leading-relaxed">{s.observationText}</p>
                 </div>
               </div>
 
               {/* Core Principle Callout */}
-              <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-2.5 text-xs text-indigo-950 flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-indigo-600 shrink-0" />
+              <div className="rounded-xl border border-muted-teal-200 bg-muted-teal-50/60 p-2.5 text-xs text-muted-teal-950 flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-muted-teal-700 shrink-0" />
                 <span>
                   <strong>Hackathon Principle:</strong> {s.principleText}
                 </span>
@@ -528,4 +512,3 @@ export function JudgeConsole({ initialUser }: JudgeConsoleProps) {
     </div>
   );
 }
-

@@ -9,7 +9,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import {
   ShieldCheck,
-  Building2,
   Lock,
   Mail,
   AlertCircle,
@@ -70,14 +69,14 @@ export default function LoginPage() {
   return (
     <div className="max-w-6xl mx-auto py-10 px-4 sm:px-6">
       <div className="text-center max-w-xl mx-auto mb-8">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold mb-3">
-          <ShieldCheck className="w-3.5 h-3.5" />
-          Verified Campus & Makerspace Auth
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-soft-celadon-100 text-celadon-900 border border-soft-celadon-200/80 text-xs font-semibold mb-3">
+          <ShieldCheck className="w-3.5 h-3.5 text-celadon-700" />
+          Verified Campus &amp; Makerspace Auth
         </div>
-        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+        <h1 className="text-3xl font-extrabold text-dusty-olive-950 tracking-tight">
           Sign In to CampusShare
         </h1>
-        <p className="text-sm text-slate-600 mt-2">
+        <p className="text-sm text-dusty-olive-600 mt-2 leading-relaxed">
           Access institutional labs, fabrication machinery, media kits, and test benches with verified credentials.
         </p>
       </div>
@@ -85,10 +84,10 @@ export default function LoginPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Column: Standard Login Form */}
         <div className="lg:col-span-5">
-          <Card className="shadow-md border-slate-200">
+          <Card className="shadow-xs border-dusty-olive-200/90">
             <CardHeader>
-              <CardTitle className="text-xl">Account Credentials</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-xl text-dusty-olive-950">Account Credentials</CardTitle>
+              <CardDescription className="text-dusty-olive-500">
                 Enter your institutional or community email.
               </CardDescription>
             </CardHeader>
@@ -101,7 +100,7 @@ export default function LoginPage() {
                 className="space-y-4"
               >
                 {error && (
-                  <div className="rounded-lg bg-rose-50 border border-rose-200 p-3 text-rose-800 text-sm flex items-start gap-2.5">
+                  <div className="rounded-xl bg-rose-50 border border-rose-200 p-3 text-rose-900 text-sm flex items-start gap-2.5">
                     <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
                     <span>{error}</span>
                   </div>
@@ -110,9 +109,9 @@ export default function LoginPage() {
                 <div className="space-y-1.5">
                   <label
                     htmlFor="email-input"
-                    className="text-xs font-semibold text-slate-700 uppercase tracking-wide flex items-center gap-1.5"
+                    className="text-xs font-semibold text-dusty-olive-800 uppercase tracking-wide flex items-center gap-1.5"
                   >
-                    <Mail className="w-3.5 h-3.5 text-slate-500" />
+                    <Mail className="w-3.5 h-3.5 text-dusty-olive-500" />
                     Email Address
                   </label>
                   <Input
@@ -128,9 +127,9 @@ export default function LoginPage() {
                 <div className="space-y-1.5">
                   <label
                     htmlFor="password-input"
-                    className="text-xs font-semibold text-slate-700 uppercase tracking-wide flex items-center gap-1.5"
+                    className="text-xs font-semibold text-dusty-olive-800 uppercase tracking-wide flex items-center gap-1.5"
                   >
-                    <Lock className="w-3.5 h-3.5 text-slate-500" />
+                    <Lock className="w-3.5 h-3.5 text-dusty-olive-500" />
                     Password
                   </label>
                   <Input
@@ -146,14 +145,14 @@ export default function LoginPage() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full font-medium"
+                  className="w-full font-medium bg-celadon-700 hover:bg-celadon-800 text-white shadow-xs"
                 >
                   {loading ? "Authenticating..." : "Sign In to Console"}
                   <ArrowRight className="w-4 h-4 ml-1.5" />
                 </Button>
 
-                <div className="pt-2 text-center text-xs text-slate-500">
-                  <span>Protected by rate limiting & append-only audit trail.</span>
+                <div className="pt-2 text-center text-xs text-dusty-olive-500">
+                  <span>Protected by rate limiting &amp; append-only audit trail.</span>
                 </div>
               </form>
             </CardContent>
@@ -162,32 +161,32 @@ export default function LoginPage() {
 
         {/* Right Column: Judge / 1-Click Evaluation Switcher */}
         <div className="lg:col-span-7">
-          <Card className="border-indigo-100 bg-gradient-to-br from-indigo-50/40 via-white to-slate-50 shadow-sm">
+          <Card className="border-dusty-olive-200/90 bg-gradient-to-br from-soft-celadon-50/50 via-white to-dusty-olive-50/30 shadow-xs">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg flex items-center gap-2 text-slate-900">
-                  <Sparkles className="w-4 h-4 text-indigo-600" />
+                <CardTitle className="text-lg flex items-center gap-2 text-dusty-olive-950">
+                  <Sparkles className="w-4 h-4 text-celadon-700" />
                   1-Click Seeded Persona Switcher
                 </CardTitle>
-                <Badge variant="outline" className="text-xs font-medium">
+                <Badge variant="accent" className="text-xs font-medium">
                   Judge Testing Mode
                 </Badge>
               </div>
-              <CardDescription>
+              <CardDescription className="text-dusty-olive-500">
                 Click any seeded account below to test its role-specific dashboard and permissions immediately:
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2.5">
               {SEED_USERS.map((user) => {
                 let badgeVariant: "destructive" | "default" | "warning" | "secondary" = "secondary";
-                let icon = <UserCheck className="w-4 h-4" />;
+                let icon = <UserCheck className="w-4 h-4 text-celadon-700" />;
 
                 if (user.role === "admin") {
                   badgeVariant = "destructive";
                   icon = <ShieldCheck className="w-4 h-4 text-rose-600" />;
                 } else if (user.role === "owner") {
                   badgeVariant = "default";
-                  icon = <Layers className="w-4 h-4 text-indigo-600" />;
+                  icon = <Layers className="w-4 h-4 text-celadon-700" />;
                 } else if (user.role === "manager") {
                   badgeVariant = "warning";
                   icon = <Wrench className="w-4 h-4 text-amber-600" />;
@@ -198,27 +197,27 @@ export default function LoginPage() {
                     key={user.email}
                     onClick={() => selectPersona(user)}
                     disabled={loading}
-                    className="w-full text-left p-3 rounded-lg border border-slate-200 bg-white hover:border-indigo-400 hover:shadow-sm transition flex items-center justify-between group"
+                    className="w-full text-left p-3 rounded-xl border border-dusty-olive-200/90 bg-white hover:border-celadon-400 hover:shadow-xs transition flex items-center justify-between group"
                   >
                     <div className="flex items-start gap-3 min-w-0">
-                      <div className="p-2 rounded-md bg-slate-100 group-hover:bg-indigo-50 transition shrink-0">
+                      <div className="p-2 rounded-lg bg-dusty-olive-50 group-hover:bg-soft-celadon-100 transition shrink-0">
                         {icon}
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-sm text-slate-900 truncate">
+                          <span className="font-semibold text-sm text-dusty-olive-950 truncate">
                             {user.full_name}
                           </span>
                           <Badge variant={badgeVariant} className="uppercase text-[9px] px-1.5 py-0 font-bold">
                             {user.role}
                           </Badge>
                         </div>
-                        <p className="text-xs text-slate-500 truncate">
+                        <p className="text-xs text-dusty-olive-500 truncate">
                           {user.department} ({user.affiliation})
                         </p>
                       </div>
                     </div>
-                    <span className="text-xs text-indigo-600 group-hover:translate-x-0.5 transition font-medium shrink-0 ml-2">
+                    <span className="text-xs text-celadon-700 group-hover:translate-x-0.5 transition font-semibold shrink-0 ml-2">
                       Sign in &rarr;
                     </span>
                   </button>
@@ -231,4 +230,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

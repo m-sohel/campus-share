@@ -109,18 +109,18 @@ export function CheckInForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Mobile-first Header Context Card */}
-      <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/60 via-white to-slate-50 p-5 shadow-sm space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-indigo-100/60">
+      <div className="rounded-2xl border border-dusty-olive-200/90 bg-gradient-to-br from-soft-celadon-50/50 via-white to-dusty-olive-50/40 p-5 shadow-xs space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-dusty-olive-100">
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-wider">
+            <Badge variant="accent" className="text-[10px] uppercase font-bold tracking-wider">
               Step 7 Check-in
             </Badge>
             <Badge variant="secondary" className="text-[10px] uppercase font-bold">
               Booking #{booking.id.slice(0, 12)}
             </Badge>
           </div>
-          <span className="text-xs text-indigo-700 font-semibold flex items-center gap-1">
-            <Clock className="w-3.5 h-3.5" />
+          <span className="text-xs text-celadon-800 font-semibold flex items-center gap-1">
+            <Clock className="w-3.5 h-3.5 text-celadon-700" />
             {new Date(booking.start_time).toLocaleDateString([], {
               month: "short",
               day: "numeric",
@@ -132,21 +132,21 @@ export function CheckInForm({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
           <div className="space-y-1">
-            <span className="text-slate-500 flex items-center gap-1">
-              <Building2 className="w-3.5 h-3.5 text-indigo-600" /> Resource Station:
+            <span className="text-dusty-olive-500 flex items-center gap-1 font-medium">
+              <Building2 className="w-3.5 h-3.5 text-celadon-700" /> Resource Station:
             </span>
-            <p className="font-bold text-slate-900 text-sm">{resource.name}</p>
-            <p className="text-slate-600">{resource.location}</p>
+            <p className="font-bold text-dusty-olive-950 text-sm">{resource.name}</p>
+            <p className="text-dusty-olive-600">{resource.location}</p>
           </div>
 
           <div className="space-y-1">
-            <span className="text-slate-500 flex items-center gap-1">
-              <User className="w-3.5 h-3.5 text-indigo-600" /> Borrower:
+            <span className="text-dusty-olive-500 flex items-center gap-1 font-medium">
+              <User className="w-3.5 h-3.5 text-celadon-700" /> Borrower:
             </span>
-            <p className="font-bold text-slate-900 text-sm">
+            <p className="font-bold text-dusty-olive-950 text-sm">
               {borrower ? borrower.full_name : "Sarah Jenkins"}
             </p>
-            <p className="text-slate-600">
+            <p className="text-dusty-olive-600">
               {borrower?.department || "Researcher"} • Score: {borrower?.reputation_score ?? 95}/100
             </p>
           </div>
@@ -154,7 +154,7 @@ export function CheckInForm({
       </div>
 
       {errorMessage && (
-        <div className="rounded-xl border border-rose-300 bg-rose-50 p-4 text-xs text-rose-800 flex items-center gap-2">
+        <div className="rounded-xl border border-rose-300 bg-rose-50 p-4 text-xs text-rose-900 flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 shrink-0 text-rose-600" />
           <span>{errorMessage}</span>
         </div>
@@ -164,15 +164,15 @@ export function CheckInForm({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-bold text-base text-slate-900 flex items-center gap-2">
-              <ClipboardCheck className="w-5 h-5 text-indigo-600" />
+            <h3 className="font-bold text-base text-dusty-olive-950 flex items-center gap-2">
+              <ClipboardCheck className="w-5 h-5 text-celadon-700" />
               Inspection Checklist
             </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-dusty-olive-600 mt-0.5">
               Verify physical and operational state prior to handover.
             </p>
           </div>
-          <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full">
+          <span className="text-xs font-semibold text-dusty-olive-700 bg-dusty-olive-100/80 px-2.5 py-1 rounded-full">
             {items.length} Checkpoints
           </span>
         </div>
@@ -181,17 +181,17 @@ export function CheckInForm({
           {items.map((item, index) => (
             <div
               key={index}
-              className={`rounded-xl border p-4 transition ${
+              className={`rounded-2xl border p-4 transition ${
                 item.state === "damaged"
                   ? "border-rose-300 bg-rose-50/50"
                   : item.state === "minor_issue"
-                  ? "border-amber-300 bg-amber-50/40"
-                  : "border-slate-200 bg-white shadow-sm"
+                  ? "border-amber-300 bg-amber-50/50"
+                  : "border-dusty-olive-200/90 bg-white shadow-xs"
               }`}
             >
               <div className="space-y-3">
                 <div className="flex items-start justify-between gap-3">
-                  <span className="font-bold text-sm text-slate-900 leading-snug">
+                  <span className="font-bold text-sm text-dusty-olive-950 leading-snug">
                     {index + 1}. {item.item}
                   </span>
                 </div>
@@ -201,10 +201,10 @@ export function CheckInForm({
                   <button
                     type="button"
                     onClick={() => handleStateChange(index, "ok")}
-                    className={`py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 border ${
+                    className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border ${
                       item.state === "ok"
-                        ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
-                        : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                        ? "bg-celadon-700 text-white border-celadon-700 shadow-xs"
+                        : "bg-white text-dusty-olive-800 border-dusty-olive-200 hover:bg-dusty-olive-50"
                     }`}
                   >
                     <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
@@ -214,10 +214,10 @@ export function CheckInForm({
                   <button
                     type="button"
                     onClick={() => handleStateChange(index, "minor_issue")}
-                    className={`py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 border ${
+                    className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border ${
                       item.state === "minor_issue"
-                        ? "bg-amber-500 text-white border-amber-500 shadow-sm"
-                        : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                        ? "bg-amber-600 text-white border-amber-600 shadow-xs"
+                        : "bg-white text-dusty-olive-800 border-dusty-olive-200 hover:bg-dusty-olive-50"
                     }`}
                   >
                     <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
@@ -227,10 +227,10 @@ export function CheckInForm({
                   <button
                     type="button"
                     onClick={() => handleStateChange(index, "damaged")}
-                    className={`py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 border ${
+                    className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border ${
                       item.state === "damaged"
-                        ? "bg-rose-600 text-white border-rose-600 shadow-sm"
-                        : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                        ? "bg-rose-600 text-white border-rose-600 shadow-xs"
+                        : "bg-white text-dusty-olive-800 border-dusty-olive-200 hover:bg-dusty-olive-50"
                     }`}
                   >
                     <XCircle className="w-3.5 h-3.5 shrink-0" />
@@ -244,7 +244,7 @@ export function CheckInForm({
                   placeholder="Optional observation notes for this checkpoint..."
                   value={item.notes || ""}
                   onChange={(e) => handleItemNoteChange(index, e.target.value)}
-                  className="w-full text-xs px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 transition"
+                  className="w-full text-xs px-3 py-2 rounded-xl border border-dusty-olive-200 bg-dusty-olive-50/50 text-dusty-olive-950 placeholder:text-dusty-olive-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-celadon-600 transition"
                 />
               </div>
             </div>
@@ -253,15 +253,15 @@ export function CheckInForm({
       </div>
 
       {/* Handover Metadata & Sign-off */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
-        <h4 className="font-bold text-sm text-slate-900 flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-indigo-600" />
+      <div className="rounded-2xl border border-dusty-olive-200/90 bg-white p-5 shadow-xs space-y-4">
+        <h4 className="font-bold text-sm text-dusty-olive-950 flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-celadon-700" />
           Technician Handover Sign-off
         </h4>
 
         <div className="space-y-3">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label className="block text-xs font-semibold text-dusty-olive-800 mb-1">
               Handover Technician / Manager Name:
             </label>
             <Input
@@ -275,14 +275,14 @@ export function CheckInForm({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label className="block text-xs font-semibold text-dusty-olive-800 mb-1">
               General Handover Notes:
             </label>
             <textarea
               rows={2}
               value={overallNotes}
               onChange={(e) => setOverallNotes(e.target.value)}
-              className="w-full text-xs p-3 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full text-xs p-3 rounded-xl border border-dusty-olive-200 text-dusty-olive-950 placeholder:text-dusty-olive-400 focus:outline-none focus:ring-2 focus:ring-celadon-600"
               placeholder="Record any general instructions, accessories delivered, or physical condition remarks..."
             />
           </div>
@@ -293,7 +293,7 @@ export function CheckInForm({
       <Button
         type="submit"
         disabled={isSubmitting}
-        className="w-full py-6 text-sm font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md flex items-center justify-center gap-2 rounded-xl"
+        className="w-full py-6 text-sm font-bold bg-celadon-700 hover:bg-celadon-800 text-white shadow-xs flex items-center justify-center gap-2 rounded-xl"
       >
         <Send className="w-4 h-4" />
         {isSubmitting ? "Recording Handover..." : "Confirm Physical Check-in & Mark In Use"}

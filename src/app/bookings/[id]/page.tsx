@@ -27,6 +27,7 @@ import {
   History,
   Hash,
 } from "lucide-react";
+import { DemoClockControl } from "@/components/clock/DemoClockControl";
 
 interface BookingDetailPageProps {
   params: Promise<{ id: string }>;
@@ -62,18 +63,25 @@ export default async function BookingDetailPage({
   const allLogs = getAuditLogs();
   const bookingLogs = allLogs.filter((l) => l.resource_id === booking.id || (linkedIncident && l.resource_id === linkedIncident.id));
 
-  // Determine role permissions
-  const isStaff = user?.role === "manager" || user?.role === "owner" || user?.role === "admin";
-  const isBorrower = user?.id === booking.user_id;
-
   return (
-    <div className="min-h-screen bg-slate-50/50 py-8 px-4 sm:px-6">
-      <div className="max-w-5xl mx-auto space-y-8">
+    <div className="min-h-screen bg-dusty-olive-50/40 py-8 px-4 sm:px-6">
+      <div className="max-w-5xl mx-auto space-y-6">
+        {/* Navigation & Clock */}
+        <div className="flex items-center justify-between">
+          <Link
+            href="/bookings"
+            className="text-xs font-semibold text-dusty-olive-600 hover:text-dusty-olive-950 transition-colors"
+          >
+            &larr; Back to Handover Desk
+          </Link>
+          <DemoClockControl compact />
+        </div>
+
         {/* Success Banners if just performed action */}
         {checkedIn === "true" && (
-          <div className="rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-emerald-950 flex items-center justify-between gap-3 shadow-sm">
+          <div className="rounded-2xl border border-celadon-300 bg-celadon-50 p-4 text-celadon-950 flex items-center justify-between gap-3 shadow-xs">
             <div className="flex items-center gap-2.5">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+              <CheckCircle2 className="w-5 h-5 text-celadon-700 shrink-0" />
               <div className="text-xs sm:text-sm">
                 <span className="font-bold">Step 7 Check-in Signed Off!</span> Equipment handed over. Resource is now marked <strong>In Use</strong>.
               </div>
@@ -83,28 +91,28 @@ export default async function BookingDetailPage({
         )}
 
         {returned === "true" && (
-          <div className="rounded-xl border border-blue-300 bg-blue-50 p-4 text-blue-950 flex items-center justify-between gap-3 shadow-sm">
+          <div className="rounded-2xl border border-soft-celadon-300 bg-soft-celadon-50 p-4 text-soft-celadon-950 flex items-center justify-between gap-3 shadow-xs">
             <div className="flex items-center gap-2.5">
-              <ClipboardCheck className="w-5 h-5 text-blue-600 shrink-0" />
+              <ClipboardCheck className="w-5 h-5 text-celadon-700 shrink-0" />
               <div className="text-xs sm:text-sm">
                 <span className="font-bold">Step 8 Return Inspection Complete!</span> Condition diff evaluated and logged to audit trail.
               </div>
             </div>
-            <Badge variant="secondary" className="text-[10px] uppercase font-bold">Recorded</Badge>
+            <Badge variant="default" className="text-[10px] uppercase font-bold">Recorded</Badge>
           </div>
         )}
 
         {/* Top Header Card */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+        <div className="rounded-2xl border border-dusty-olive-200/90 bg-white p-6 shadow-xs space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-dusty-olive-100">
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-mono text-slate-500 uppercase">Reservation</span>
-                <span className="text-xs font-mono font-bold text-slate-900">#{booking.id}</span>
+                <span className="text-xs font-mono text-dusty-olive-500 uppercase">Reservation</span>
+                <span className="text-xs font-mono font-bold text-dusty-olive-900">#{booking.id}</span>
                 <StatusBadge status={booking.status} />
               </div>
-              <h1 className="text-2xl font-bold text-slate-900 mt-1">{resource.name}</h1>
-              <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+              <h1 className="text-2xl font-bold text-dusty-olive-950 mt-1">{resource.name}</h1>
+              <p className="text-xs sm:text-sm text-dusty-olive-600 mt-0.5">
                 {resource.location} • <span className="capitalize">{resource.category.replace("_", " ")}</span>
               </p>
             </div>
@@ -113,7 +121,7 @@ export default async function BookingDetailPage({
             <div className="flex items-center gap-2">
               {booking.status === "approved" && (
                 <Link href={`/bookings/${booking.id}/check-in`}>
-                  <Button className="bg-indigo-600 hover:bg-indigo-700 text-white gap-1.5 shadow-sm">
+                  <Button className="bg-celadon-700 hover:bg-celadon-800 text-white gap-1.5 shadow-xs font-bold text-xs">
                     <ClipboardCheck className="w-4 h-4" />
                     Start Step 7 Check-in
                   </Button>
@@ -122,7 +130,7 @@ export default async function BookingDetailPage({
 
               {booking.status === "in_use" && (
                 <Link href={`/bookings/${booking.id}/return`}>
-                  <Button className="bg-amber-600 hover:bg-amber-700 text-white gap-1.5 shadow-sm">
+                  <Button className="bg-muted-teal-700 hover:bg-muted-teal-800 text-white gap-1.5 shadow-xs font-bold text-xs">
                     <ClipboardCheck className="w-4 h-4" />
                     Process Step 8 Return
                   </Button>
@@ -139,7 +147,7 @@ export default async function BookingDetailPage({
 
           {/* Stepper Progress Visualizer */}
           <div className="space-y-2">
-            <span className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+            <span className="text-xs font-bold text-dusty-olive-700 uppercase tracking-wider block">
               10-Step Lifecycle Progress
             </span>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
@@ -166,40 +174,40 @@ export default async function BookingDetailPage({
           </div>
 
           {/* Reservation Details Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-xl bg-dusty-olive-50/70 border border-dusty-olive-200/80 text-xs">
             <div className="space-y-1">
-              <span className="text-slate-500 font-semibold flex items-center gap-1">
-                <User className="w-3.5 h-3.5 text-indigo-600" /> Borrower & Team:
+              <span className="text-dusty-olive-500 font-semibold flex items-center gap-1">
+                <User className="w-3.5 h-3.5 text-celadon-700" /> Borrower &amp; Team:
               </span>
-              <p className="font-bold text-slate-900">{borrower?.full_name || "Sarah Jenkins"}</p>
-              <p className="text-slate-600">{borrower?.department || borrower?.email}</p>
-              <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600 font-medium">
+              <p className="font-bold text-dusty-olive-950">{borrower?.full_name || "Sarah Jenkins"}</p>
+              <p className="text-dusty-olive-600">{borrower?.department || borrower?.email}</p>
+              <span className="inline-flex items-center gap-1 text-[11px] text-celadon-800 font-semibold">
                 <ShieldCheck className="w-3 h-3" /> Rep: {borrower?.reputation_score ?? 95}
               </span>
             </div>
 
             <div className="space-y-1">
-              <span className="text-slate-500 font-semibold flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5 text-indigo-600" /> Reservation Slot:
+              <span className="text-dusty-olive-500 font-semibold flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5 text-celadon-700" /> Reservation Slot:
               </span>
-              <p className="font-bold text-slate-900">
+              <p className="font-bold text-dusty-olive-950">
                 {new Date(booking.start_time).toLocaleDateString([], {
                   month: "short",
                   day: "numeric",
                 })}
               </p>
-              <p className="text-slate-600">
+              <p className="text-dusty-olive-600">
                 {new Date(booking.start_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} –{" "}
                 {new Date(booking.end_time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
               </p>
-              <span className="text-[11px] text-slate-500">Fairness Score: {booking.fairness_score}/10</span>
+              <span className="text-[11px] text-dusty-olive-500 font-mono">Fairness Score: {booking.fairness_score}/10</span>
             </div>
 
             <div className="space-y-1">
-              <span className="text-slate-500 font-semibold flex items-center gap-1">
-                <Building2 className="w-3.5 h-3.5 text-indigo-600" /> Purpose:
+              <span className="text-dusty-olive-500 font-semibold flex items-center gap-1">
+                <Building2 className="w-3.5 h-3.5 text-celadon-700" /> Purpose:
               </span>
-              <p className="text-slate-800 italic leading-relaxed">
+              <p className="text-dusty-olive-800 italic leading-relaxed">
                 &quot;{booking.purpose}&quot;
               </p>
             </div>
@@ -209,7 +217,7 @@ export default async function BookingDetailPage({
         {/* QR Code Pass (if approved) */}
         {booking.status === "approved" && (
           <div className="space-y-3">
-            <h2 className="text-lg font-bold text-slate-900">Digital Handover Pass & QR</h2>
+            <h2 className="text-base font-bold text-dusty-olive-950">Digital Handover Pass &amp; QR</h2>
             <BookingQRCode
               bookingId={booking.id}
               resourceName={resource.name}
@@ -221,11 +229,11 @@ export default async function BookingDetailPage({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <ClipboardCheck className="w-5 h-5 text-indigo-600" />
-                Condition Records & Inspection Diff
+              <h2 className="text-base font-bold text-dusty-olive-950 flex items-center gap-2">
+                <ClipboardCheck className="w-5 h-5 text-celadon-700" />
+                Condition Records &amp; Inspection Diff
               </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-dusty-olive-500 mt-0.5">
                 Side-by-side comparison between check-in baseline (Step 7) and return condition (Step 8).
               </p>
             </div>
@@ -238,22 +246,22 @@ export default async function BookingDetailPage({
           />
         </div>
 
-        {/* Audit Trail History (Step 10 Full Lifecycle Visibility) */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        {/* Audit Trail History */}
+        <div className="rounded-2xl border border-dusty-olive-200/90 bg-white p-5 shadow-xs space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-dusty-olive-100">
             <div className="flex items-center gap-2">
-              <History className="w-4 h-4 text-indigo-600" />
-              <h3 className="font-bold text-sm text-slate-900">
+              <History className="w-4 h-4 text-celadon-700" />
+              <h3 className="font-bold text-sm text-dusty-olive-950">
                 Cryptographic Audit Trail (Step 10)
               </h3>
             </div>
-            <span className="text-[11px] text-slate-500 font-mono">
+            <span className="text-[11px] text-dusty-olive-500 font-mono">
               SHA-256 Chained Integrity
             </span>
           </div>
 
           {bookingLogs.length === 0 ? (
-            <div className="text-xs text-slate-500 italic p-3 bg-slate-50 rounded-lg">
+            <div className="text-xs text-dusty-olive-500 italic p-3 bg-dusty-olive-50 rounded-xl">
               Check-in and return events will append immutable SHA-256 chained audit entries here.
             </div>
           ) : (
@@ -261,24 +269,24 @@ export default async function BookingDetailPage({
               {bookingLogs.map((log) => (
                 <div
                   key={log.id}
-                  className="p-3 rounded-xl border border-slate-200 bg-slate-50/70 text-xs space-y-1.5"
+                  className="p-3.5 rounded-xl border border-dusty-olive-200 bg-dusty-olive-50/60 text-xs space-y-1.5"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <Badge variant="outline" className="font-mono text-[10px] font-bold">
                         {log.action}
                       </Badge>
-                      <span className="text-slate-600">by {log.actor_role}</span>
+                      <span className="text-dusty-olive-600">by {log.actor_role}</span>
                     </div>
-                    <span className="text-[11px] text-slate-500">
+                    <span className="text-[11px] text-dusty-olive-500">
                       {new Date(log.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
                     </span>
                   </div>
 
-                  <p className="text-slate-800 font-medium">{log.reason}</p>
+                  <p className="text-dusty-olive-900 font-medium">{log.reason}</p>
 
-                  <div className="flex items-center gap-2 text-[10px] font-mono text-slate-500 pt-1 border-t border-slate-200/60">
-                    <Hash className="w-3 h-3 text-slate-400" />
+                  <div className="flex items-center gap-2 text-[10px] font-mono text-dusty-olive-400 pt-1 border-t border-dusty-olive-200/60">
+                    <Hash className="w-3 h-3 text-dusty-olive-400" />
                     <span className="truncate">Hash: {log.hash}</span>
                   </div>
                 </div>
@@ -301,13 +309,13 @@ function StatusBadge({ status }: { status: string }) {
       );
     case "in_use":
       return (
-        <Badge variant="default" className="bg-indigo-600 uppercase font-bold text-[10px]">
+        <Badge variant="teal" className="uppercase font-bold text-[10px]">
           In Use (Active)
         </Badge>
       );
     case "returned":
       return (
-        <Badge variant="success" className="uppercase font-bold text-[10px]">
+        <Badge variant="default" className="uppercase font-bold text-[10px]">
           Returned (Clean)
         </Badge>
       );
@@ -341,22 +349,22 @@ function StepIndicator({
 }) {
   return (
     <div
-      className={`p-2.5 rounded-xl border transition ${
+      className={`p-2.5 rounded-xl border transition-colors ${
         active
-          ? "border-indigo-600 bg-indigo-50/70 text-indigo-950 font-bold"
+          ? "border-celadon-600 bg-celadon-50/70 text-celadon-950 font-bold ring-2 ring-celadon-200"
           : completed
-          ? "border-emerald-300 bg-emerald-50/40 text-emerald-950"
-          : "border-slate-200 bg-white text-slate-400"
+          ? "border-soft-celadon-300 bg-soft-celadon-50/60 text-soft-celadon-950"
+          : "border-dusty-olive-200 bg-white text-dusty-olive-400"
       }`}
     >
       <div className="flex items-center gap-1.5 mb-0.5">
         <span
           className={`h-4 w-4 rounded-full text-[10px] flex items-center justify-center font-bold ${
             active
-              ? "bg-indigo-600 text-white"
+              ? "bg-celadon-700 text-white"
               : completed
-              ? "bg-emerald-600 text-white"
-              : "bg-slate-200 text-slate-500"
+              ? "bg-celadon-600 text-white"
+              : "bg-dusty-olive-200 text-dusty-olive-600"
           }`}
         >
           {completed ? "✓" : step}

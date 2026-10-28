@@ -310,3 +310,4 @@ export default async function IncidentDetailPage({
     </div>
   );
 }
+
