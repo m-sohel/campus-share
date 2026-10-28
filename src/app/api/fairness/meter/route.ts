@@ -22,3 +22,4 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: err.message || "Failed to load fair use meter." }, { status: 500 });
   }
 }
+

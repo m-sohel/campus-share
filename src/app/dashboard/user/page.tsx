@@ -18,6 +18,9 @@ import { getSupabaseAdminClient } from "@/backend/client";
 import { explainBookingDecision } from "@/lib/rules/decision-explanation";
 import { Booking, Resource } from "@/types";
 import { FairUseMeter } from "@/components/fairness/FairUseMeter";
+import { getUserWaitlistEntries } from "@/backend/services/waitlist";
+import { WaitlistBreakdownCard } from "@/components/waitlist/WaitlistBreakdownCard";
+import { Clock } from "lucide-react";
 
 export default async function UserDashboard() {
   const user = await requireRole(["user", "admin"]);
@@ -57,6 +60,14 @@ export default async function UserDashboard() {
     }
   } catch (e) {
     console.error("Failed to load user bookings:", e);
+  }
+
+  // Fetch active waitlist positions & offers for this user
+  let userWaitlists: any[] = [];
+  try {
+    userWaitlists = await getUserWaitlistEntries(targetId);
+  } catch (e) {
+    console.error("Failed to load user waitlists:", e);
   }
 
   // Run eligibility checks on all 8 resources
@@ -195,6 +206,36 @@ export default async function UserDashboard() {
           </div>
         )}
       </div>
+
+      {/* Stage 7: Active Waitlist Positions & Vacated Slot Offers */}
+      {userWaitlists.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                <Clock className="w-5 h-5 text-indigo-600" />
+                Your Waitlist Positions & Priority Breakdown
+              </h2>
+              <p className="text-sm text-slate-600">
+                Transparent multi-factor ranking. Offers are automatically delivered here with a 2-hour window.
+              </p>
+            </div>
+            <Badge variant="outline" className="font-semibold text-xs border-amber-200 text-amber-700 bg-amber-50">
+              {userWaitlists.length} Active Queue Positions
+            </Badge>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {userWaitlists.map((entry) => (
+              <WaitlistBreakdownCard
+                key={entry.id}
+                entry={entry}
+                viewerRole="user"
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Your Bookings Section */}
       <div className="space-y-4">

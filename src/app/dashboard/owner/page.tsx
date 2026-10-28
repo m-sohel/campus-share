@@ -11,6 +11,9 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { getOwnerInbox } from "@/backend/services/bookings";
 import { OwnerInboxList } from "@/components/bookings/OwnerInboxList";
+import { getWaitlistForResource } from "@/backend/services/waitlist";
+import { WaitlistBreakdownCard } from "@/components/waitlist/WaitlistBreakdownCard";
+import { Users } from "lucide-react";
 
 export default async function OwnerDashboard() {
   const user = await requireRole(["owner", "admin"]);
@@ -31,6 +34,19 @@ export default async function OwnerDashboard() {
     user.role === "admin"
       ? SEED_RESOURCES
       : SEED_RESOURCES.filter((r) => r.owner_id === targetId || r.owner_id === user.id);
+
+  // Fetch live waitlists for owned resources (Stage 7 Fairness & Queue Engine)
+  const waitlistsByResource: { resource: any; queue: any[] }[] = [];
+  try {
+    for (const r of ownedResources) {
+      const q = await getWaitlistForResource(r.id);
+      if (q && q.length > 0) {
+        waitlistsByResource.push({ resource: r, queue: q });
+      }
+    }
+  } catch (e) {
+    console.error("Failed to fetch waitlists for owner:", e);
+  }
 
   // Find assigned manager details
   const managers = SEED_USERS.filter((u) => u.role === "manager");
@@ -97,6 +113,47 @@ export default async function OwnerDashboard() {
 
         <OwnerInboxList initialInbox={inboxItems} actorId={targetId} />
       </div>
+
+      {/* Stage 7: Equipment Waitlist Queue & Owner Override */}
+      {waitlistsByResource.length > 0 && (
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <Users className="w-5 h-5 text-indigo-600" />
+              Equipment Waitlists & Queue Priority
+            </h2>
+            <p className="text-sm text-slate-600">
+              Transparent multi-factor queue ranking (fair-share past usage, wait duration, verified deadlines).
+            </p>
+          </div>
+
+          <div className="space-y-6">
+            {waitlistsByResource.map(({ resource, queue }) => (
+              <div key={resource.id} className="space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-slate-800 text-sm">{resource.name}</span>
+                    <Badge variant="outline" className="text-[10px] text-indigo-600 border-indigo-200">
+                      High Demand
+                    </Badge>
+                  </div>
+                  <span className="text-xs text-slate-500 font-mono">{queue.length} Candidates in Queue</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {queue.map((entry) => (
+                    <WaitlistBreakdownCard
+                      key={entry.id}
+                      entry={entry}
+                      viewerRole="owner"
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Owned Resources Grid */}
       <div className="space-y-4">

@@ -428,3 +428,36 @@ export async function overrideWaitlistEntry(
 
   return { success: true };
 }
+
+/**
+ * Returns all active waitlist entries for a specific user, enriched with resource details and breakdown.
+ */
+export async function getUserWaitlistEntries(
+  userId: string
+): Promise<EnrichedWaitlistEntry[]> {
+  const supabase = getSupabaseAdminClient();
+
+  const { data: rawEntries } = await supabase
+    .from("waitlist_entries")
+    .select("*, resources(*), profiles(*)")
+    .eq("user_id", userId)
+    .in("status", ["waiting", "offered"])
+    .order("created_at", { ascending: true });
+
+  if (!rawEntries || rawEntries.length === 0) return [];
+
+  const results: EnrichedWaitlistEntry[] = [];
+
+  for (const item of rawEntries) {
+    const queue = await getWaitlistForResource(item.resource_id);
+    const candidate = queue.find((q) => q.id === item.id);
+    if (candidate) {
+      results.push({
+        ...candidate,
+        resource: item.resources,
+      });
+    }
+  }
+
+  return results;
+}

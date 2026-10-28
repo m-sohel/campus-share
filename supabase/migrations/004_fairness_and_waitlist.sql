@@ -62,3 +62,4 @@ BEGIN
     ALTER TABLE public.waitlist_entries ADD COLUMN breakdown JSONB;
   END IF;
 END $$;
+
