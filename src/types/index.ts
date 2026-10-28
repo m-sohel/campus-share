@@ -205,3 +205,4 @@ export interface AuditLogEntry {
   hash: string;
   created_at: string;
 }
+

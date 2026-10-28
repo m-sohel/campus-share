@@ -83,3 +83,4 @@ export function verifyAuditChain(chain: AuditLogEntry[]): ChainVerificationResul
     message: `Audit chain verified successfully. All ${chain.length} entries are tamper-free.`,
   };
 }
+

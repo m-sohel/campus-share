@@ -450,3 +450,4 @@ export const SEED_RESOURCES: SeedResource[] = [
     requirements: [],
   },
 ];
+

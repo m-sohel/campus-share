@@ -100,3 +100,4 @@ export async function requireAuth(): Promise<Profile> {
 
   return user;
 }
+

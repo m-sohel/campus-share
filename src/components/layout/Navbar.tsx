@@ -169,3 +169,4 @@ export function Navbar({ currentUser }: NavbarProps) {
     </header>
   );
 }
+

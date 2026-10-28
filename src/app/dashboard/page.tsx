@@ -10,3 +10,4 @@ export default async function DashboardRoot() {
 
   redirect(`/dashboard/${user.role}`);
 }
+

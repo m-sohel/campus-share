@@ -234,3 +234,4 @@ CREATE INDEX IF NOT EXISTS idx_bookings_resource_dates ON public.bookings(resour
 CREATE INDEX IF NOT EXISTS idx_bookings_user ON public.bookings(user_id);
 CREATE INDEX IF NOT EXISTS idx_credentials_user ON public.credentials(user_id);
 CREATE INDEX IF NOT EXISTS idx_audit_created ON public.audit_log(created_at);
+

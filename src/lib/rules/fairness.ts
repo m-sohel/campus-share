@@ -81,3 +81,4 @@ export function calculateFairnessScore(input: FairnessInput): FairnessScoreResul
     explanation: reasons.length > 0 ? reasons.join(", ") : "Standard fair allocation score",
   };
 }
+
