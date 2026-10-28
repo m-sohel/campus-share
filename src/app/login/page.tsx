@@ -9,41 +9,56 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import {
   ShieldCheck,
-  Building2,
   Lock,
   Mail,
+  User,
   AlertCircle,
   Sparkles,
   ArrowRight,
   UserCheck,
   Wrench,
   Layers,
+  Building,
 } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
+  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [affiliation, setAffiliation] = useState("university");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = async (targetEmail?: string, targetPassword?: string) => {
-    const loginEmail = targetEmail || email;
-    const loginPassword = targetPassword || password;
+  const handleSubmit = async (targetEmail?: string, targetPassword?: string) => {
+    const activeEmail = targetEmail || email;
+    const activePassword = targetPassword || password;
 
-    if (!loginEmail || !loginPassword) {
+    if (!activeEmail || !activePassword) {
       setError("Please provide both email and password.");
+      return;
+    }
+
+    if (mode === "signup" && !fullName) {
+      setError("Please provide your full name to create an account.");
       return;
     }
 
     setLoading(true);
     setError(null);
 
+    const endpoint = mode === "signup" ? "/api/auth/signup" : "/api/auth/login";
+    const payload =
+      mode === "signup"
+        ? { email: activeEmail, password: activePassword, full_name: fullName, affiliation }
+        : { email: activeEmail, password: activePassword };
+
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: loginEmail, password: loginPassword }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -62,9 +77,10 @@ export default function LoginPage() {
   };
 
   const selectPersona = (user: (typeof SEED_USERS)[0]) => {
+    setMode("login");
     setEmail(user.email);
     setPassword(user.password);
-    handleLogin(user.email, user.password);
+    handleSubmit(user.email, user.password);
   };
 
   return (
@@ -75,7 +91,7 @@ export default function LoginPage() {
           Verified Campus & Makerspace Auth
         </div>
         <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-          Sign In to CampusShare
+          {mode === "login" ? "Sign In to CampusShare" : "Create CampusShare Account"}
         </h1>
         <p className="text-sm text-slate-600 mt-2">
           Access institutional labs, fabrication machinery, media kits, and test benches with verified credentials.
@@ -83,20 +99,57 @@ export default function LoginPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Column: Standard Login Form */}
+        {/* Left Column: Interactive Form */}
         <div className="lg:col-span-5">
           <Card className="shadow-md border-slate-200">
-            <CardHeader>
-              <CardTitle className="text-xl">Account Credentials</CardTitle>
+            {/* Mode Selector Tabs */}
+            <div className="flex border-b border-slate-200 bg-slate-50/50 rounded-t-xl overflow-hidden p-1 gap-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setMode("login");
+                  setError(null);
+                }}
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition ${
+                  mode === "login"
+                    ? "bg-white text-indigo-700 shadow-xs border border-slate-200"
+                    : "text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode("signup");
+                  setError(null);
+                }}
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition ${
+                  mode === "signup"
+                    ? "bg-white text-indigo-700 shadow-xs border border-slate-200"
+                    : "text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                Create Account (Sign Up)
+              </button>
+            </div>
+
+            <CardHeader className="pt-4 pb-2">
+              <CardTitle className="text-xl">
+                {mode === "login" ? "Welcome Back" : "New Member Registration"}
+              </CardTitle>
               <CardDescription>
-                Enter your institutional or community email.
+                {mode === "login"
+                  ? "Enter your institutional email to access your console."
+                  : "Register as a borrower to request equipment access."}
               </CardDescription>
             </CardHeader>
+
             <CardContent>
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  handleLogin();
+                  handleSubmit();
                 }}
                 className="space-y-4"
               >
@@ -105,6 +158,48 @@ export default function LoginPage() {
                     <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
                     <span>{error}</span>
                   </div>
+                )}
+
+                {mode === "signup" && (
+                  <>
+                    <div className="space-y-1.5">
+                      <label
+                        htmlFor="name-input"
+                        className="text-xs font-semibold text-slate-700 uppercase tracking-wide flex items-center gap-1.5"
+                      >
+                        <User className="w-3.5 h-3.5 text-slate-500" />
+                        Full Name
+                      </label>
+                      <Input
+                        id="name-input"
+                        type="text"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        placeholder="e.g. Kasim Shah"
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label
+                        htmlFor="affil-input"
+                        className="text-xs font-semibold text-slate-700 uppercase tracking-wide flex items-center gap-1.5"
+                      >
+                        <Building className="w-3.5 h-3.5 text-slate-500" />
+                        Affiliation
+                      </label>
+                      <select
+                        id="affil-input"
+                        value={affiliation}
+                        onChange={(e) => setAffiliation(e.target.value)}
+                        className="w-full text-sm border border-slate-200 rounded-md p-2 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      >
+                        <option value="university">University Student / Researcher</option>
+                        <option value="makerspace">Community Makerspace Member</option>
+                        <option value="startup">Early-Stage Hardware Startup</option>
+                      </select>
+                    </div>
+                  </>
                 )}
 
                 <div className="space-y-1.5">
@@ -138,7 +233,7 @@ export default function LoginPage() {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••••••"
+                    placeholder={mode === "signup" ? "Min 8 characters" : "••••••••••••"}
                     required
                   />
                 </div>
@@ -148,12 +243,16 @@ export default function LoginPage() {
                   disabled={loading}
                   className="w-full font-medium"
                 >
-                  {loading ? "Authenticating..." : "Sign In to Console"}
+                  {loading
+                    ? "Processing..."
+                    : mode === "login"
+                    ? "Sign In to Console"
+                    : "Create Verified Account"}
                   <ArrowRight className="w-4 h-4 ml-1.5" />
                 </Button>
 
                 <div className="pt-2 text-center text-xs text-slate-500">
-                  <span>Protected by rate limiting & append-only audit trail.</span>
+                  <span>Protected by rate limiting & tamper-evident audit trail.</span>
                 </div>
               </form>
             </CardContent>
@@ -231,4 +330,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
