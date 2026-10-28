@@ -1,96 +1,103 @@
-"use client";
-
-import { useState } from "react";
 import Link from "next/link";
-import { SEED_RESOURCES } from "@/lib/data/seed-data";
-import { ResourceCategory } from "@/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { getAllResources, getCredentials } from "@/lib/data/store";
+import { getCurrentUser } from "@/lib/auth/role-guard";
+import { ResourceCatalog } from "@/components/resources/ResourceCatalog";
 import { Button } from "@/components/ui/button";
 import {
   ShieldCheck,
   ArrowRight,
-  MapPin,
-  Lock,
   FileBadge,
+  Lock,
+  Award,
+  Sparkles,
+  CheckCircle2,
 } from "lucide-react";
 
-const CATEGORIES: { label: string; value: ResourceCategory | "all" }[] = [
-  { label: "All Equipment", value: "all" },
-  { label: "Fabrication", value: "fabrication" },
-  { label: "Electronics", value: "electronics" },
-  { label: "Media Gear", value: "media" },
-  { label: "Labs & Spaces", value: "labs_spaces" },
-];
-
-export default function HomePage() {
-  const [selectedCategory, setSelectedCategory] = useState<ResourceCategory | "all">("all");
-
-  const filteredResources =
-    selectedCategory === "all"
-      ? SEED_RESOURCES
-      : SEED_RESOURCES.filter((r) => r.category === selectedCategory);
+export default async function HomePage() {
+  const currentUser = await getCurrentUser();
+  const resources = await getAllResources();
+  const userCredentials = currentUser ? await getCredentials(currentUser.id) : [];
 
   return (
     <div className="space-y-12 pb-16">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-indigo-50/60 via-white to-white py-16 sm:py-24 border-b border-slate-200">
+      <section className="relative overflow-hidden bg-gradient-to-b from-soft-celadon-50/80 via-white to-dusty-olive-50/40 py-14 sm:py-20 border-b border-dusty-olive-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-100 text-indigo-800 text-xs font-semibold mb-6 shadow-sm">
-            <ShieldCheck className="w-4 h-4 text-indigo-600" />
-            University Campus & Community Makerspace Trust Network
+          {/* Judge Evaluation Callout Banner */}
+          <div className="mb-6 mx-auto max-w-2xl bg-tea-green-100/80 border border-tea-green-300/90 rounded-2xl p-4 text-tea-green-950 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-2.5 text-left">
+              <Award className="w-5 h-5 text-tea-green-800 shrink-0" />
+              <div>
+                <strong className="block text-xs font-bold uppercase tracking-wider text-tea-green-950">
+                  Hackathon Judge Evaluation Tour
+                </strong>
+                <p className="text-xs text-tea-green-900/90 leading-snug">
+                  Follow the 5-minute interactive script covering the complete 10-step lifecycle.
+                </p>
+              </div>
+            </div>
+            <Link href="/judge" className="shrink-0 w-full sm:w-auto">
+              <Button size="sm" variant="accent" className="w-full sm:w-auto text-xs font-bold gap-1 shadow-xs">
+                Open /judge Script <ArrowRight className="w-3.5 h-3.5" />
+              </Button>
+            </Link>
           </div>
 
-          <h1 className="text-4xl sm:text-6xl font-extrabold text-slate-900 tracking-tight max-w-4xl mx-auto leading-tight">
-            Unlock High-Value Campus & Makerspace Resources
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-soft-celadon-100 border border-soft-celadon-200 text-celadon-900 text-xs font-bold mb-6 shadow-xs">
+            <ShieldCheck className="w-4 h-4 text-celadon-700" />
+            University Campus &amp; Community Makerspace Trust Network
+          </div>
+
+          <h1 className="text-4xl sm:text-6xl font-extrabold text-dusty-olive-950 tracking-tight max-w-4xl mx-auto leading-tight">
+            Unlock High-Value Campus &amp; Makerspace Resources
           </h1>
 
-          <p className="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">
+          <p className="mt-4 text-base sm:text-lg text-dusty-olive-700 max-w-2xl mx-auto leading-relaxed">
             A trusted resource-sharing platform where verified owners list equipment, users prove eligibility with credentials, and every booking is governed by plain-language accountability.
           </p>
 
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link href="/login">
-              <Button size="lg" className="font-semibold gap-2 shadow-md">
-                Enter Platform & Evaluation Console
+              <Button size="lg" className="font-semibold gap-2 shadow-xs">
+                Enter Platform &amp; Evaluation Console
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
             <a href="#catalog">
               <Button size="lg" variant="outline" className="font-semibold">
-                Explore 8 Seeded Resources
+                Explore Shared Equipment Catalog
               </Button>
             </a>
           </div>
 
           {/* 3 Pillars */}
           <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto text-left">
-            <div className="p-5 rounded-xl border border-slate-200 bg-white shadow-sm">
-              <div className="h-10 w-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 mb-3">
+            <div className="p-6 rounded-2xl border border-dusty-olive-200/90 bg-white shadow-xs hover:border-celadon-300 transition-colors">
+              <div className="h-10 w-10 rounded-xl bg-celadon-100 text-celadon-700 flex items-center justify-center mb-3">
                 <FileBadge className="w-5 h-5" />
               </div>
-              <h3 className="font-bold text-sm text-slate-900">Credential-Backed Eligibility</h3>
-              <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
+              <h3 className="font-bold text-sm text-dusty-olive-950">Credential-Backed Eligibility</h3>
+              <p className="text-xs text-dusty-olive-600 mt-1.5 leading-relaxed">
                 Automated checks verify laser safety, cleanroom protocol, and drone licenses with zero unexplained denials.
               </p>
             </div>
 
-            <div className="p-5 rounded-xl border border-slate-200 bg-white shadow-sm">
-              <div className="h-10 w-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 mb-3">
-                <ShieldCheck className="w-5 h-5" />
+            <div className="p-6 rounded-2xl border border-dusty-olive-200/90 bg-white shadow-xs hover:border-celadon-300 transition-colors">
+              <div className="h-10 w-10 rounded-xl bg-tea-green-100 text-tea-green-800 flex items-center justify-center mb-3">
+                <CheckCircle2 className="w-5 h-5" />
               </div>
-              <h3 className="font-bold text-sm text-slate-900">Verified Condition Records</h3>
-              <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
+              <h3 className="font-bold text-sm text-dusty-olive-950">Verified Condition Records</h3>
+              <p className="text-xs text-dusty-olive-600 mt-1.5 leading-relaxed">
                 Step 7 check-in and Step 8 return inspections with photo checklists ensure full accountability for expensive hardware.
               </p>
             </div>
 
-            <div className="p-5 rounded-xl border border-slate-200 bg-white shadow-sm">
-              <div className="h-10 w-10 rounded-lg bg-rose-50 flex items-center justify-center text-rose-600 mb-3">
+            <div className="p-6 rounded-2xl border border-dusty-olive-200/90 bg-white shadow-xs hover:border-celadon-300 transition-colors">
+              <div className="h-10 w-10 rounded-xl bg-muted-teal-100 text-muted-teal-700 flex items-center justify-center mb-3">
                 <Lock className="w-5 h-5" />
               </div>
-              <h3 className="font-bold text-sm text-slate-900">Append-Only Audit Chain</h3>
-              <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
+              <h3 className="font-bold text-sm text-dusty-olive-950">Append-Only Audit Chain</h3>
+              <p className="text-xs text-dusty-olive-600 mt-1.5 leading-relaxed">
                 Every state transition and access decision writes to a SHA-256 cryptographically chained log for complete transparency.
               </p>
             </div>
@@ -100,111 +107,11 @@ export default function HomePage() {
 
       {/* Catalog Section */}
       <section id="catalog" className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
-              Shared Equipment & Facilities Catalog
-            </h2>
-            <p className="text-sm text-slate-600 mt-1">
-              Showing {filteredResources.length} available resources across 4 active categories.
-            </p>
-          </div>
-
-          {/* Category Filter Pills */}
-          <div className="flex flex-wrap items-center gap-1.5">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat.value}
-                onClick={() => setSelectedCategory(cat.value)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
-                  selectedCategory === cat.value
-                    ? "bg-indigo-600 text-white shadow-sm"
-                    : "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200"
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Resources Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {filteredResources.map((res) => (
-            <Card
-              key={res.id}
-              className="group overflow-hidden border-slate-200 shadow-sm hover:border-indigo-400 hover:shadow-md transition flex flex-col justify-between"
-            >
-              <div>
-                <div className="relative h-44 w-full bg-slate-100 overflow-hidden">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={res.image_url}
-                    alt={res.name}
-                    className="h-full w-full object-cover group-hover:scale-105 transition duration-300"
-                  />
-                  <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
-                    <Badge variant="secondary" className="bg-white/95 text-slate-900 backdrop-blur font-semibold text-[10px] uppercase">
-                      {res.category.replace("_", " ")}
-                    </Badge>
-                  </div>
-                  {res.is_high_demand && (
-                    <div className="absolute top-2.5 right-2.5">
-                      <Badge variant="destructive" className="text-[10px] uppercase font-bold shadow-sm">
-                        High Demand
-                      </Badge>
-                    </div>
-                  )}
-                </div>
-
-                <CardHeader className="p-4 pb-2">
-                  <div className="flex items-center gap-1 text-[11px] text-slate-500 mb-1">
-                    <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                    <span className="truncate">{res.location}</span>
-                  </div>
-                  <CardTitle className="text-base font-bold leading-snug text-slate-900 group-hover:text-indigo-600 transition">
-                    {res.name}
-                  </CardTitle>
-                </CardHeader>
-
-                <CardContent className="p-4 pt-1 space-y-3 text-xs text-slate-600">
-                  <p className="line-clamp-2 leading-relaxed">{res.description}</p>
-
-                  <div className="space-y-1 text-[11px] bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-500">Institution:</span>
-                      <span className="font-semibold text-slate-800 capitalize">{res.institution}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-500">Max Duration:</span>
-                      <span className="font-semibold text-slate-800">{res.max_duration_hours}h max</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-500">Min Notice:</span>
-                      <span className="font-semibold text-slate-800">{res.min_lead_time_hours}h lead</span>
-                    </div>
-                  </div>
-
-                  {res.requirements.length > 0 && (
-                    <div className="text-[11px] text-amber-800 bg-amber-50/80 p-2 rounded border border-amber-200 flex items-start gap-1.5">
-                      <Lock className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
-                      <span><strong>Requires:</strong> {res.requirements[0].credential_type}</span>
-                    </div>
-                  )}
-                </CardContent>
-              </div>
-
-              <div className="p-4 pt-0">
-                <Link href="/login" className="block w-full">
-                  <Button variant="default" size="sm" className="w-full font-medium gap-1.5">
-                    Check Eligibility & Book
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Button>
-                </Link>
-              </div>
-            </Card>
-          ))}
-        </div>
+        <ResourceCatalog
+          initialResources={resources}
+          currentUser={currentUser}
+          userCredentials={userCredentials}
+        />
       </section>
     </div>
   );

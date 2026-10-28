@@ -4,6 +4,7 @@ import {
   getUserNotifications,
   markNotificationAsRead,
 } from "@/backend/services/notifications";
+import { getNotifications } from "@/lib/data/store";
 
 export async function GET(req: NextRequest) {
   try {
@@ -12,17 +13,38 @@ export async function GET(req: NextRequest) {
     const userId = searchParams.get("userId") || user?.id;
 
     if (!userId) {
-      return NextResponse.json(
-        { error: "Authentication required to fetch notifications." },
-        { status: 401 }
-      );
+      return NextResponse.json({
+        success: true,
+        notifications: [],
+        unreadCount: 0,
+      });
     }
 
-    const notifications = await getUserNotifications(userId);
+    let notifications: any[] = [];
+    try {
+      notifications = await getUserNotifications(userId);
+    } catch {
+      // Fallback to store
+      notifications = await getNotifications(userId);
+    }
+
+    if (!notifications || notifications.length === 0) {
+      try {
+        const storeNotifs = await getNotifications(userId);
+        if (storeNotifs && storeNotifs.length > 0) {
+          notifications = storeNotifs;
+        }
+      } catch {
+        // Ignore fallback error
+      }
+    }
+
+    const unreadCount = notifications.filter((n) => !n.is_read).length;
 
     return NextResponse.json({
       success: true,
       notifications,
+      unreadCount,
     });
   } catch (error: any) {
     return NextResponse.json(
@@ -57,4 +79,3 @@ export async function PATCH(req: NextRequest) {
     );
   }
 }
-

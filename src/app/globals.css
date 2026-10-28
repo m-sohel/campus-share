@@ -1,28 +1,133 @@
 @import "tailwindcss";
 
+@theme {
+  /* Tea Green - Primary Brand Accents & Highlights */
+  --color-tea-green-50: #f3fbea;
+  --color-tea-green-100: #e6f7d4;
+  --color-tea-green-200: #cdefa9;
+  --color-tea-green-300: #b4e77e;
+  --color-tea-green-400: #9bde54;
+  --color-tea-green-500: #82d629;
+  --color-tea-green-600: #68ab21;
+  --color-tea-green-700: #4e8118;
+  --color-tea-green-800: #345610;
+  --color-tea-green-900: #1a2b08;
+  --color-tea-green-950: #121e06;
+
+  /* Celadon - Vibrant Green */
+  --color-celadon-50: #f0f9eb;
+  --color-celadon-100: #e1f3d8;
+  --color-celadon-200: #c4e7b1;
+  --color-celadon-300: #a6db8a;
+  --color-celadon-400: #89cf63;
+  --color-celadon-500: #6bc33c;
+  --color-celadon-600: #569c30;
+  --color-celadon-700: #407524;
+  --color-celadon-800: #2b4e18;
+  --color-celadon-900: #15270c;
+  --color-celadon-950: #0f1b08;
+
+  /* Soft Celadon - Muted Green */
+  --color-soft-celadon-50: #eff6ef;
+  --color-soft-celadon-100: #dfecdf;
+  --color-soft-celadon-200: #bfdabe;
+  --color-soft-celadon-300: #9fc79e;
+  --color-soft-celadon-400: #7eb57d;
+  --color-soft-celadon-500: #5ea25d;
+  --color-soft-celadon-600: #4b824a;
+  --color-soft-celadon-700: #396138;
+  --color-soft-celadon-800: #264125;
+  --color-soft-celadon-900: #132013;
+  --color-soft-celadon-950: #0d170d;
+
+  /* Muted Teal - Secondary Actions & Complements */
+  --color-muted-teal-50: #eff6f5;
+  --color-muted-teal-100: #deedea;
+  --color-muted-teal-200: #bedad5;
+  --color-muted-teal-300: #9dc8c0;
+  --color-muted-teal-400: #7cb6ab;
+  --color-muted-teal-500: #5ca396;
+  --color-muted-teal-600: #498378;
+  --color-muted-teal-700: #37625a;
+  --color-muted-teal-800: #25413c;
+  --color-muted-teal-900: #12211e;
+  --color-muted-teal-950: #0d1715;
+
+  /* Dusty Olive - Subdued Surfaces, Neutrals & Borders */
+  --color-dusty-olive-50: #f3f4f0;
+  --color-dusty-olive-100: #e7e9e2;
+  --color-dusty-olive-200: #cfd3c5;
+  --color-dusty-olive-300: #b7bda8;
+  --color-dusty-olive-400: #9fa78b;
+  --color-dusty-olive-500: #87916e;
+  --color-dusty-olive-600: #6c7458;
+  --color-dusty-olive-700: #515742;
+  --color-dusty-olive-800: #363a2c;
+  --color-dusty-olive-900: #1b1d16;
+  --color-dusty-olive-950: #13140f;
+
+  /* Semantic Brand Aliases */
+  --color-brand-50: var(--color-tea-green-50);
+  --color-brand-100: var(--color-tea-green-100);
+  --color-brand-200: var(--color-tea-green-200);
+  --color-brand-300: var(--color-tea-green-300);
+  --color-brand-400: var(--color-celadon-500);
+  --color-brand-500: var(--color-celadon-600);
+  --color-brand-600: var(--color-celadon-700);
+  --color-brand-700: var(--color-celadon-800);
+  --color-brand-800: var(--color-celadon-900);
+  --color-brand-900: var(--color-celadon-950);
+
+  /* Typography */
+  --font-sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fbfcfb;
+  --foreground: #132013;
+  --card: #ffffff;
+  --card-foreground: #132013;
+  --popover: #ffffff;
+  --popover-foreground: #132013;
+  --primary: #407524;
+  --primary-foreground: #ffffff;
+  --secondary: #eff6ef;
+  --secondary-foreground: #132013;
+  --muted: #f3f4f0;
+  --muted-foreground: #515742;
+  --accent: #e6f7d4;
+  --accent-foreground: #1a2b08;
+  --destructive: #be123c;
+  --destructive-foreground: #ffffff;
+  --border: #dfecdf;
+  --input: #cfd3c5;
+  --ring: #407524;
+  --radius: 0.75rem;
   --font-geist-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-geist-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar refinement */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-dusty-olive-300);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-dusty-olive-400);
 }
