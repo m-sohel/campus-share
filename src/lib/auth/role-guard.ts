@@ -30,21 +30,21 @@ export async function getCurrentUser(): Promise<Profile | null> {
     }
   }
 
-  // 2. Otherwise check Supabase Auth
+  // 2. Otherwise check Supabase Auth using secure getUser()
   try {
     const supabase = await createClientServer();
     const {
-      data: { session },
-    } = await supabase.auth.getSession();
+      data: { user: authUser },
+    } = await supabase.auth.getUser();
 
-    if (!session?.user) {
+    if (!authUser) {
       return null;
     }
 
     const { data: profile } = await supabase
       .from("profiles")
       .select("*")
-      .eq("id", session.user.id)
+      .eq("id", authUser.id)
       .single();
 
     if (profile) {
@@ -53,16 +53,16 @@ export async function getCurrentUser(): Promise<Profile | null> {
 
     // Fallback if profile row is pending creation
     return {
-      id: session.user.id,
-      email: session.user.email || "",
-      full_name: session.user.user_metadata?.full_name || "Campus Member",
-      role: (session.user.user_metadata?.role as UserRole) || "user",
-      department: session.user.user_metadata?.department || null,
-      affiliation: session.user.user_metadata?.affiliation || "university",
+      id: authUser.id,
+      email: authUser.email || "",
+      full_name: authUser.user_metadata?.full_name || "Campus Member",
+      role: (authUser.user_metadata?.role as UserRole) || "user",
+      department: authUser.user_metadata?.department || null,
+      affiliation: authUser.user_metadata?.affiliation || "university",
       avatar_url: null,
       reputation_score: 100,
-      created_at: session.user.created_at,
-      updated_at: session.user.created_at,
+      created_at: authUser.created_at,
+      updated_at: authUser.created_at,
     };
   } catch {
     return null;
@@ -100,4 +100,3 @@ export async function requireAuth(): Promise<Profile> {
 
   return user;
 }
-
