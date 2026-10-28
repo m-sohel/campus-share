@@ -4,12 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import {
   Wrench,
-  ShieldCheck,
   CheckCircle2,
-  AlertTriangle,
   ClipboardCheck,
-  Building2,
-  Clock,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -17,11 +13,14 @@ import { Button } from "@/components/ui/button";
 export default async function ManagerDashboard() {
   const user = await requireRole(["manager", "admin"]);
 
+  const seedUser = SEED_USERS.find((u) => u.email === user.email || u.id === user.id);
+  const targetId = seedUser?.id || user.id;
+
   // Resources assigned to this technician / manager
   const assignedResources =
     user.role === "admin"
       ? SEED_RESOURCES
-      : SEED_RESOURCES.filter((r) => r.manager_id === user.id);
+      : SEED_RESOURCES.filter((r) => r.manager_id === targetId || r.manager_id === user.id);
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 space-y-8">
@@ -48,80 +47,80 @@ export default async function ManagerDashboard() {
           <div className="flex items-center gap-3">
             <div className="bg-white/10 backdrop-blur rounded-xl px-4 py-2 border border-white/10 text-center">
               <span className="text-[11px] uppercase tracking-wider text-amber-200 block font-semibold">
-                Equipment Delegated
+                Supervised Gear
               </span>
               <span className="text-2xl font-extrabold text-white">
                 {assignedResources.length}
+              </span>
+            </div>
+            <div className="bg-white/10 backdrop-blur rounded-xl px-4 py-2 border border-white/10 text-center">
+              <span className="text-[11px] uppercase tracking-wider text-amber-200 block font-semibold">
+                Inspection Protocols
+              </span>
+              <span className="text-2xl font-extrabold text-white">
+                Ready
               </span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Technician Responsibilities Alert */}
-      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900 text-xs sm:text-sm flex items-start gap-3">
-        <ClipboardCheck className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-        <div className="space-y-1">
-          <strong className="block text-amber-950">
-            Physical Inspection & Handover Protocol
-          </strong>
-          <p className="text-amber-800 leading-relaxed">
-            As designated technician, you execute Step 7 (initial condition sign-off at check-in) and Step 8 (return inspection). Always verify optical lenses, bed alignment, and safety interlocks prior to completing handover.
-          </p>
-        </div>
-      </div>
-
-      {/* Assigned Equipment Grid */}
+      {/* Handover & Inspection Protocols */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-slate-900">
-            Supervised Equipment Stations
-          </h2>
-          <Link href="/">
-            <Button variant="outline" size="sm">
-              View Public Listings
-            </Button>
-          </Link>
+          <div>
+            <h2 className="text-xl font-bold text-slate-900">Assigned Equipment & Safety Supervision</h2>
+            <p className="text-sm text-slate-600">
+              Assigned resources awaiting check-in condition inspections and physical handovers.
+            </p>
+          </div>
+          <Button size="sm" asChild>
+            <Link href="/login">Switch Role</Link>
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {assignedResources.map((res) => (
             <Card key={res.id} className="border-slate-200 shadow-sm flex flex-col justify-between">
-              <div>
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-wider mb-2">
-                      {res.category.replace("_", " ")}
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between gap-2">
+                  <Badge variant="outline" className="capitalize text-xs font-semibold">
+                    {res.category.replace("_", " ")}
+                  </Badge>
+                  {res.requires_supervision && (
+                    <Badge variant="warning" className="text-[10px] uppercase font-bold">
+                      Supervision Mandatory
                     </Badge>
-                    <Badge variant={res.requires_supervision ? "warning" : "secondary"} className="text-[10px]">
-                      {res.requires_supervision ? "Supervision Required" : "Self-Service Cert"}
-                    </Badge>
-                  </div>
-                  <CardTitle className="text-base leading-snug">{res.name}</CardTitle>
-                  <CardDescription className="text-xs text-slate-500 mt-1">
-                    {res.location}
-                  </CardDescription>
-                </CardHeader>
+                  )}
+                </div>
+                <CardTitle className="text-base font-bold text-slate-900 mt-2">
+                  {res.name}
+                </CardTitle>
+                <CardDescription className="text-xs text-slate-500">
+                  {res.location}
+                </CardDescription>
+              </CardHeader>
 
-                <CardContent className="space-y-3 text-xs text-slate-700">
-                  <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200 space-y-1">
-                    <span className="font-semibold text-slate-900 block">Operating Rules:</span>
-                    <p className="text-slate-600 leading-relaxed">{res.rules}</p>
+              <CardContent className="space-y-3 pt-0">
+                <div className="rounded-lg bg-amber-50/50 p-2.5 border border-amber-200/60 text-xs space-y-1 text-slate-700">
+                  <div className="font-semibold text-amber-900 flex items-center gap-1.5">
+                    <ClipboardCheck className="w-3.5 h-3.5 text-amber-700" />
+                    Handover Inspection Checklist:
                   </div>
+                  <ul className="list-disc list-inside text-[11px] text-slate-600 pl-1 space-y-0.5">
+                    <li>Power supply & physical casing check</li>
+                    <li>Lens / nozzle cleanliness verified</li>
+                    <li>Calibration & safety interlock test</li>
+                  </ul>
+                </div>
 
-                  <div className="flex items-center justify-between text-slate-600 pt-1">
-                    <span>Advance Notice: {res.min_lead_time_hours}h</span>
-                    <span>Max Session: {res.max_duration_hours}h</span>
-                  </div>
-                </CardContent>
-              </div>
-
-              <div className="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs">
-                <span className="text-emerald-700 font-medium flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Ready for Handover
-                </span>
-                <span className="text-slate-500 font-mono text-[11px]">ID: {res.id.slice(0, 8)}</span>
-              </div>
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
+                  <span>Weekly Slots: <strong className="text-slate-900">Mon-Fri 09:00-18:00</strong></span>
+                  <span className="flex items-center gap-1 text-emerald-700 font-medium">
+                    <CheckCircle2 className="w-3 h-3" /> Active
+                  </span>
+                </div>
+              </CardContent>
             </Card>
           ))}
         </div>
@@ -129,4 +128,3 @@ export default async function ManagerDashboard() {
     </div>
   );
 }
-

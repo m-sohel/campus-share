@@ -4,13 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import {
   Layers,
-  ShieldCheck,
-  Building2,
-  Clock,
-  AlertCircle,
-  FileCheck,
   CheckCircle2,
-  UserCheck,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -18,11 +12,14 @@ import { Button } from "@/components/ui/button";
 export default async function OwnerDashboard() {
   const user = await requireRole(["owner", "admin"]);
 
+  const seedUser = SEED_USERS.find((u) => u.email === user.email || u.id === user.id);
+  const targetId = seedUser?.id || user.id;
+
   // Filter resources owned by this specific owner (or all if admin)
   const ownedResources =
     user.role === "admin"
       ? SEED_RESOURCES
-      : SEED_RESOURCES.filter((r) => r.owner_id === user.id);
+      : SEED_RESOURCES.filter((r) => r.owner_id === targetId || r.owner_id === user.id);
 
   // Find assigned manager details
   const managers = SEED_USERS.filter((u) => u.role === "manager");
@@ -58,101 +55,96 @@ export default async function OwnerDashboard() {
                 {ownedResources.length}
               </span>
             </div>
+            <div className="bg-white/10 backdrop-blur rounded-xl px-4 py-2 border border-white/10 text-center">
+              <span className="text-[11px] uppercase tracking-wider text-indigo-200 block font-semibold">
+                Assigned Techs
+              </span>
+              <span className="text-2xl font-extrabold text-white">
+                {managers.length}
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Main Section */}
-      <div className="space-y-6">
+      {/* Owned Resources Grid */}
+      <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-slate-900">
-              Managed Facility Resources
-            </h2>
+            <h2 className="text-xl font-bold text-slate-900">Your Managed Inventory</h2>
             <p className="text-sm text-slate-600">
-              Machinery and laboratories under your institutional custody.
+              High-value equipment with safety rules and weekly availability slots.
             </p>
           </div>
-          <Link href="/">
-            <Button variant="outline" size="sm">
-              Public Catalog Preview
-            </Button>
-          </Link>
+          <Button size="sm" asChild>
+            <Link href="/login">Switch Role</Link>
+          </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {ownedResources.map((res) => {
-            const manager = managers.find((m) => m.id === res.manager_id);
-
-            return (
-              <Card key={res.id} className="border-slate-200 shadow-sm flex flex-col justify-between">
-                <div>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-wider mb-2">
-                          {res.category.replace("_", " ")}
-                        </Badge>
-                        <CardTitle className="text-lg leading-snug">{res.name}</CardTitle>
-                        <CardDescription className="text-xs text-slate-500 mt-1">
-                          {res.location} ({res.institution})
-                        </CardDescription>
-                      </div>
-
-                      <Badge variant={res.is_high_demand ? "destructive" : "success"}>
-                        {res.is_high_demand ? "High Demand" : "Normal"}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-
-                  <CardContent className="space-y-4 text-xs text-slate-700">
-                    <p className="text-slate-600 line-clamp-2">{res.description}</p>
-
-                    <div className="rounded-lg bg-slate-50 border border-slate-200 p-3 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-slate-900">Delegated Technician:</span>
-                        <span className="text-indigo-600 font-medium">
-                          {manager ? manager.full_name : "Unassigned"}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-slate-900">Lead Time / Max Window:</span>
-                        <span>{res.min_lead_time_hours}h advance • {res.max_duration_hours}h max</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-slate-900">Supervision Required:</span>
-                        <span>{res.requires_supervision ? "Mandatory Staff Presence" : "Autonomous with Cert"}</span>
-                      </div>
-                    </div>
-
-                    {res.requirements.length > 0 && (
-                      <div className="space-y-1">
-                        <span className="font-semibold text-slate-900 block">
-                          Mandatory Safety Prerequisites:
-                        </span>
-                        {res.requirements.map((req, i) => (
-                          <div key={i} className="text-slate-600 flex items-start gap-1.5">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600 shrink-0 mt-0.5" />
-                            <span>{req.explanation}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </div>
-
-                <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs">
-                  <span className="text-slate-500">Weekly Slots: Mon-Fri 09:00 - 18:00</span>
-                  <Badge variant="outline" className="font-medium text-slate-700">
-                    Active & Listed
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {ownedResources.map((res) => (
+            <Card key={res.id} className="border-slate-200 shadow-sm flex flex-col justify-between hover:border-indigo-300 transition">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between gap-2">
+                  <Badge variant="outline" className="capitalize text-xs font-semibold">
+                    {res.category.replace("_", " ")}
                   </Badge>
+                  {res.is_high_demand && (
+                    <Badge variant="destructive" className="text-[10px] uppercase font-bold">
+                      High Demand
+                    </Badge>
+                  )}
                 </div>
-              </Card>
-            );
-          })}
+                <CardTitle className="text-base font-bold text-slate-900 mt-2 line-clamp-1">
+                  {res.name}
+                </CardTitle>
+                <CardDescription className="text-xs text-slate-500">
+                  {res.location} • {res.institution}
+                </CardDescription>
+              </CardHeader>
+
+              <CardContent className="space-y-3 pt-0">
+                <p className="text-xs text-slate-600 line-clamp-2">
+                  {res.description}
+                </p>
+
+                <div className="rounded-lg bg-slate-50 p-2.5 border border-slate-100 text-xs space-y-1">
+                  <div className="flex justify-between text-slate-600">
+                    <span>Max Duration:</span>
+                    <span className="font-semibold text-slate-900">{res.max_duration_hours}h</span>
+                  </div>
+                  <div className="flex justify-between text-slate-600">
+                    <span>Supervision:</span>
+                    <span className="font-semibold text-slate-900">
+                      {res.requires_supervision ? "Required" : "Autonomous"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-slate-600">
+                    <span>Deposit:</span>
+                    <span className="font-semibold text-slate-900">
+                      {res.deposit_required_cents > 0 ? `$${res.deposit_required_cents / 100}` : "Free"}
+                    </span>
+                  </div>
+                </div>
+
+                {res.requirements.length > 0 && (
+                  <div className="text-[11px] text-slate-500">
+                    <span className="font-semibold text-slate-700">Required: </span>
+                    {res.requirements.map((r) => r.credential_type).join(", ")}
+                  </div>
+                )}
+
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-emerald-700 font-medium">
+                  <span className="flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> Ready for Bookings
+                  </span>
+                  <span className="text-slate-400 font-mono text-[10px]">{res.id.slice(0, 8)}...</span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     </div>
   );
 }
-

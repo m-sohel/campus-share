@@ -138,7 +138,7 @@ export default async function AdminDashboard() {
         </CardHeader>
         <CardContent className="space-y-2 text-xs text-slate-700">
           <div className="bg-white p-3 rounded-lg border border-emerald-200 font-mono text-[11px] space-y-1">
-            <div className="text-slate-500">// Chain verification check:</div>
+            <div className="text-slate-500">{"// Chain verification check:"}</div>
             <div>Status: <span className="text-emerald-700 font-bold">{chainResult.isValid ? "VERIFIED (OK)" : "TAMPERED"}</span></div>
             <div>Message: {chainResult.message}</div>
             <div>Genesis Hash: <span className="text-slate-600 break-all">{sampleGenesis.hash}</span></div>

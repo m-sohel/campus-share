@@ -24,7 +24,6 @@ async function seed() {
     console.log(`   - 6 Users: researcher, expired, pending, startup, new, revoked`);
     console.log(`✅ Loaded ${SEED_RESOURCES.length} resources across 4 categories.`);
     console.log(`✅ Loaded ${SEED_CREDENTIALS.length} credentials with varied validity.`);
-    console.log("To seed a live Supabase project, set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local and re-run.");
     return;
   }
 
@@ -34,12 +33,16 @@ async function seed() {
 
   console.log(`📡 Connected to Supabase at: ${supabaseUrl}`);
 
+  // Fetch all existing users once to avoid rate limits
+  const { data: userListRes } = await supabase.auth.admin.listUsers();
+  const existingUsers = userListRes?.users || [];
+
+  const idMap = new Map<string, string>(); // seedUserId -> realAuthUserId
+
   // 1. Seed Users
   console.log("\n👤 Seeding Profiles & Auth Users...");
   for (const user of SEED_USERS) {
-    // Check if user exists in auth.users
-    const { data: existingUserList } = await supabase.auth.admin.listUsers();
-    const existing = existingUserList?.users?.find((u) => u.email === user.email);
+    const existing = existingUsers.find((u) => u.email === user.email);
 
     let authUserId = user.id;
 
@@ -67,6 +70,8 @@ async function seed() {
       console.log(`  ✓ Auth user already exists: ${user.email}`);
     }
 
+    idMap.set(user.id, authUserId);
+
     // Upsert into public.profiles
     const { error: profileError } = await supabase.from("profiles").upsert(
       {
@@ -79,7 +84,7 @@ async function seed() {
         reputation_score: user.reputation_score,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "email" }
+      { onConflict: "id" }
     );
 
     if (profileError) {
@@ -90,11 +95,14 @@ async function seed() {
   // 2. Seed Resources & Requirements
   console.log("\n🔬 Seeding Resources & Requirements...");
   for (const res of SEED_RESOURCES) {
+    const realOwnerId = idMap.get(res.owner_id) || res.owner_id;
+    const realManagerId = res.manager_id ? idMap.get(res.manager_id) || res.manager_id : null;
+
     const { error: resError } = await supabase.from("resources").upsert(
       {
         id: res.id,
-        owner_id: res.owner_id,
-        manager_id: res.manager_id,
+        owner_id: realOwnerId,
+        manager_id: realManagerId,
         name: res.name,
         category: res.category,
         description: res.description,
@@ -121,12 +129,15 @@ async function seed() {
 
     // Seed Requirements
     for (const req of res.requirements) {
-      await supabase.from("resource_requirements").upsert({
-        resource_id: res.id,
-        credential_type: req.credential_type,
-        is_mandatory: req.is_mandatory,
-        explanation: req.explanation,
-      });
+      await supabase.from("resource_requirements").upsert(
+        {
+          resource_id: res.id,
+          credential_type: req.credential_type,
+          is_mandatory: req.is_mandatory,
+          explanation: req.explanation,
+        },
+        { onConflict: "id" }
+      );
     }
 
     // Seed default availability slots: Mon-Fri 09:00 - 18:00
@@ -144,10 +155,12 @@ async function seed() {
   // 3. Seed Credentials
   console.log("\n🎖️ Seeding Credentials...");
   for (const cred of SEED_CREDENTIALS) {
+    const realUserId = idMap.get(cred.user_id) || cred.user_id;
+
     const { error: credError } = await supabase.from("credentials").upsert(
       {
         id: cred.id,
-        user_id: cred.user_id,
+        user_id: realUserId,
         credential_type: cred.credential_type,
         title: cred.title,
         status: cred.status,
@@ -166,9 +179,10 @@ async function seed() {
   }
 
   // 4. Initial Audit Log Entry
+  const adminRealId = idMap.get("00000000-0000-0000-0000-000000000001") || "00000000-0000-0000-0000-000000000001";
   const genesisEntry = {
     id: "30000000-0000-0000-0000-000000000001",
-    actor_id: "00000000-0000-0000-0000-000000000001",
+    actor_id: adminRealId,
     actor_role: "admin",
     action: "SYSTEM_INITIALIZED",
     resource_type: "system",
@@ -199,4 +213,3 @@ seed().catch((err) => {
   console.error("Fatal error during seeding:", err);
   process.exit(1);
 });
-
