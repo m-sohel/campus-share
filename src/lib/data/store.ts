@@ -314,10 +314,12 @@ export async function logAuditEvent(entry: {
   const hash = computeAuditHash(prevHash, {
     id,
     actor_id: entry.actor_id,
+    actor_role: entry.actor_role,
     action: entry.action,
     resource_type: entry.resource_type,
     resource_id: entry.resource_id,
-    new_state: entry.new_state,
+    previous_state: entry.previous_state || null,
+    new_state: entry.new_state || null,
     reason: entry.reason,
     created_at: now,
   });
