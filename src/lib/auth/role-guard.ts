@@ -2,18 +2,20 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Profile, UserRole } from "@/types";
 import { createClientServer } from "@/lib/supabase/server";
+import { getSupabaseAdminClient } from "@/backend/client";
 import { DEMO_USERS } from "@/lib/data/demo-users";
 
 /**
- * Retrieves the currently logged-in user profile from Supabase Auth or active demo session.
+ * Retrieves the currently logged-in user profile from Supabase Auth or active session cookie.
  */
 export async function getCurrentUser(): Promise<Profile | null> {
   const cookieStore = await cookies();
-  const demoCookie = cookieStore.get("campus_demo_session")?.value;
+  const sessionCookie = cookieStore.get("campus_demo_session")?.value;
 
-  // 1. Check for active demo session (useful for instant evaluation & local tests)
-  if (demoCookie) {
-    const demoUser = DEMO_USERS.find((u) => u.email === demoCookie);
+  // 1. Check for active session cookie (demo users or registered platform users)
+  if (sessionCookie) {
+    const cleanEmail = sessionCookie.trim().toLowerCase();
+    const demoUser = DEMO_USERS.find((u) => u.email.toLowerCase() === cleanEmail);
     if (demoUser) {
       return {
         id: demoUser.id,
@@ -27,6 +29,22 @@ export async function getCurrentUser(): Promise<Profile | null> {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
+    }
+
+    // Look up registered user profile from Supabase DB
+    try {
+      const adminClient = getSupabaseAdminClient();
+      const { data: dbProfile } = await adminClient
+        .from("profiles")
+        .select("*")
+        .eq("email", cleanEmail)
+        .maybeSingle();
+
+      if (dbProfile) {
+        return dbProfile as Profile;
+      }
+    } catch (err) {
+      console.warn("DB profile session lookup notice:", err);
     }
   }
 

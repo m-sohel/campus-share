@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { checkLoginRateLimit, resetLoginRateLimit } from "@/lib/auth/rate-limiter";
 import { DEMO_USERS } from "@/lib/data/demo-users";
 import { createClientServer } from "@/lib/supabase/server";
+import { getSupabaseAdminClient } from "@/backend/client";
 import { logAuditEvent } from "@/backend/services/audit";
 
 export async function POST(req: NextRequest) {
@@ -15,10 +16,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const cleanEmail = String(email).trim().toLowerCase();
+    const rawPassword = String(password);
+    const cleanPassword = rawPassword.trim();
+
     // 1. Check Rate Limit
     const clientIp = req.headers.get("x-forwarded-for") || "local-client";
     const userAgent = req.headers.get("user-agent") || "unknown";
-    const rateLimitKey = `${clientIp}::${email.toLowerCase()}`;
+    const rateLimitKey = `${clientIp}::${cleanEmail}`;
     const rateLimit = checkLoginRateLimit(rateLimitKey);
 
     if (!rateLimit.allowed) {
@@ -33,10 +38,10 @@ export async function POST(req: NextRequest) {
 
     // 2. Check Seeded / Demo Users
     const demoMatch = DEMO_USERS.find(
-      (u) => u.email.toLowerCase() === email.toLowerCase()
+      (u) => u.email.toLowerCase() === cleanEmail
     );
 
-    if (demoMatch && password === demoMatch.password) {
+    if (demoMatch && (rawPassword === demoMatch.password || cleanPassword === demoMatch.password)) {
       resetLoginRateLimit(rateLimitKey);
 
       // Log login event to tamper-evident audit trail
@@ -78,24 +83,46 @@ export async function POST(req: NextRequest) {
       return response;
     }
 
-    // 3. Fallback: Authenticate via Supabase Auth if connected
+    // 3. Fallback: Authenticate via Supabase Auth
     try {
       const supabase = await createClientServer();
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      
+      // Try with raw password first
+      let authResult = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password: rawPassword,
       });
+
+      // If failed and password has spaces, try trimmed password
+      if (authResult.error && rawPassword !== cleanPassword) {
+        authResult = await supabase.auth.signInWithPassword({
+          email: cleanEmail,
+          password: cleanPassword,
+        });
+      }
+
+      const { data, error } = authResult;
 
       if (!error && data.user) {
         resetLoginRateLimit(rateLimitKey);
 
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role, full_name")
-          .eq("id", data.user.id)
-          .single();
+        let role = "user";
+        let fullName = data.user.user_metadata?.full_name || "Campus Member";
 
-        const role = profile?.role || "user";
+        // Query profiles table safely with admin client to bypass RLS
+        try {
+          const adminClient = getSupabaseAdminClient();
+          const { data: profile } = await adminClient
+            .from("profiles")
+            .select("role, full_name")
+            .eq("id", data.user.id)
+            .maybeSingle();
+
+          if (profile?.role) role = profile.role;
+          if (profile?.full_name) fullName = profile.full_name;
+        } catch (profErr) {
+          console.warn("Profile fetch warning on login:", profErr);
+        }
 
         try {
           await logAuditEvent({
@@ -112,14 +139,31 @@ export async function POST(req: NextRequest) {
           console.warn("Audit logging warning on Supabase login:", e);
         }
 
-        return NextResponse.json({
+        const response = NextResponse.json({
           success: true,
-          user: data.user,
+          user: {
+            ...data.user,
+            full_name: fullName,
+            role,
+          },
           redirectUrl: `/dashboard/${role}`,
         });
+
+        // Set session cookie for seamless server-side authorization in role-guard
+        response.cookies.set("campus_demo_session", cleanEmail, {
+          path: "/",
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: 60 * 60 * 24 * 7, // 7 days
+        });
+
+        return response;
+      } else if (error) {
+        console.warn("Supabase signIn attempt failed:", error.message);
       }
-    } catch {
-      // Supabase connection unavailable or failed
+    } catch (supabaseErr: any) {
+      console.warn("Supabase connection exception:", supabaseErr?.message || supabaseErr);
     }
 
     // Invalid credentials

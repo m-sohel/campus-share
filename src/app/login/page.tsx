@@ -35,7 +35,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (targetEmail?: string, targetPassword?: string) => {
-    const activeEmail = targetEmail || email;
+    const activeEmail = (targetEmail || email).trim();
     const activePassword = targetPassword || password;
 
     if (!activeEmail || !activePassword) {
