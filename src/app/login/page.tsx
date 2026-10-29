@@ -67,7 +67,12 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Authentication failed.");
+        if (data.alreadyExists) {
+          setMode("login");
+          setError(data.error || "Account already registered. Please enter your password to sign in.");
+        } else {
+          setError(data.error || "Authentication failed.");
+        }
       } else {
         router.push(data.redirectUrl || "/dashboard");
         router.refresh();

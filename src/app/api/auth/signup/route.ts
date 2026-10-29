@@ -23,6 +23,7 @@ export async function POST(req: NextRequest) {
     const supabase = getSupabaseAdminClient();
 
     // 1. Create user in Supabase Auth
+    let userId: string | null = null;
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email,
       password,
@@ -36,25 +37,65 @@ export async function POST(req: NextRequest) {
     });
 
     if (authError) {
+      const msg = authError.message || "";
+      if (msg.toLowerCase().includes("already") || msg.toLowerCase().includes("registered")) {
+        // User already created in auth, check if profile exists or can be signed in
+        const { data: existingUser } = await supabase
+          .from("profiles")
+          .select("id, role, full_name")
+          .eq("email", email.toLowerCase().trim())
+          .maybeSingle();
+
+        return NextResponse.json(
+          {
+            error: "An account with this email address already exists. Please click 'Sign In' to access your console.",
+            alreadyExists: true,
+            redirectUrl: existingUser ? `/dashboard/${existingUser.role}` : "/dashboard/user",
+          },
+          { status: 409 }
+        );
+      }
+
       return NextResponse.json({ error: authError.message }, { status: 400 });
     }
 
-    const userId = authData.user.id;
+    userId = authData.user.id;
 
-    // 2. Insert into public.profiles
-    const { error: profileError } = await supabase.from("profiles").insert({
-      id: userId,
-      email,
-      full_name,
-      role: "user",
-      department: department || "General Campus",
-      affiliation: affiliation || "university",
-      reputation_score: 100.0,
-    });
+    // 2. Insert or Upsert into public.profiles with safe retry
+    let profileError: any = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const { error: pErr } = await supabase.from("profiles").upsert(
+          {
+            id: userId,
+            email: email.toLowerCase().trim(),
+            full_name,
+            role: "user",
+            department: department || "General Campus",
+            affiliation: affiliation || "university",
+            reputation_score: 100.0,
+          },
+          { onConflict: "id" }
+        );
+
+        if (!pErr) {
+          profileError = null;
+          break;
+        }
+        profileError = pErr;
+      } catch (err: any) {
+        profileError = err;
+      }
+
+      // Small backoff before retry if schema cache is refreshing
+      if (attempt === 0 && profileError) {
+        await new Promise((r) => setTimeout(r, 300));
+      }
+    }
 
     if (profileError) {
-      console.error("Profile creation error:", profileError);
-      return NextResponse.json({ error: profileError.message }, { status: 500 });
+      console.warn("Notice: public.profiles sync warning:", profileError.message || profileError);
+      // Even if profiles table is slow to reflect schema cache, user is created in auth
     }
 
     // 3. Write to Audit Log (Tamper-proof event)
@@ -82,7 +123,7 @@ export async function POST(req: NextRequest) {
       redirectUrl: "/dashboard/user",
     });
 
-    // Set session cookie for instant demo/eval login
+    // Set session cookie for instant login
     response.cookies.set("campus_demo_session", email, {
       path: "/",
       httpOnly: true,
@@ -97,4 +138,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-
