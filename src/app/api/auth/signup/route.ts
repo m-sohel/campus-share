@@ -39,18 +39,73 @@ export async function POST(req: NextRequest) {
     if (authError) {
       const msg = authError.message || "";
       if (msg.toLowerCase().includes("already") || msg.toLowerCase().includes("registered")) {
-        // User already created in auth, check if profile exists or can be signed in
-        const { data: existingUser } = await supabase
-          .from("profiles")
-          .select("id, role, full_name")
-          .eq("email", email.toLowerCase().trim())
-          .maybeSingle();
+        // Attempt password verification to automatically sign in existing user
+        try {
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+
+          if (!signInError && signInData?.user) {
+            let role = signInData.user.user_metadata?.role || "user";
+            let name = signInData.user.user_metadata?.full_name || full_name;
+
+            try {
+              const { data: prof } = await supabase
+                .from("profiles")
+                .select("id, role, full_name")
+                .eq("id", signInData.user.id)
+                .maybeSingle();
+              if (prof?.role) role = prof.role;
+              if (prof?.full_name) name = prof.full_name;
+            } catch {
+              // fallback to auth metadata
+            }
+
+            const response = NextResponse.json({
+              success: true,
+              message: "Account already exists; signed in successfully.",
+              user: {
+                id: signInData.user.id,
+                email,
+                full_name: name,
+                role,
+              },
+              redirectUrl: `/dashboard/${role}`,
+            });
+
+            response.cookies.set("campus_demo_session", email, {
+              path: "/",
+              httpOnly: true,
+              secure: process.env.NODE_ENV === "production",
+              sameSite: "lax",
+              maxAge: 60 * 60 * 24 * 7,
+            });
+
+            return response;
+          }
+        } catch {
+          // fallback to 409
+        }
+
+        // If password was incorrect or sign-in failed
+        let role = "user";
+        try {
+          const { data: existingUser } = await supabase
+            .from("profiles")
+            .select("id, role, full_name")
+            .eq("email", email.toLowerCase().trim())
+            .maybeSingle();
+          if (existingUser?.role) role = existingUser.role;
+        } catch {
+          // ignore schema cache error
+        }
 
         return NextResponse.json(
           {
-            error: "An account with this email address already exists. Please click 'Sign In' to access your console.",
+            error: "An account with this email address already exists. Please switch to 'Sign In' or check your password.",
             alreadyExists: true,
-            redirectUrl: existingUser ? `/dashboard/${existingUser.role}` : "/dashboard/user",
+            redirectUrl: `/dashboard/${role}`,
           },
           { status: 409 }
         );
