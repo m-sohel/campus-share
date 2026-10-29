@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
       // User has NOT created an account yet!
       return NextResponse.json(
         {
-          error: "Is email se koi account nahi mila. Kripya pehle naya account banayein (Sign Up karein).",
+          error: "No account found with this email address. Please create an account first.",
           userNotFound: true,
           suggestSignup: true,
         },
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
       if (!isPasswordCorrect) {
         return NextResponse.json(
           {
-            error: `Galat password! Kripya sahi password enter karein. (${rateLimit.remainingAttempts} attempt(s) bache hain).`,
+            error: `Incorrect password. Please check your credentials. (${rateLimit.remainingAttempts} attempt(s) remaining).`,
             wrongPassword: true,
             remainingAttempts: rateLimit.remainingAttempts,
           },
@@ -196,7 +196,7 @@ export async function POST(req: NextRequest) {
     // Account exists, but password was incorrect
     return NextResponse.json(
       {
-        error: `Galat password! Kripya sahi password enter karein. (${rateLimit.remainingAttempts} attempt(s) bache hain).`,
+        error: `Incorrect password. Please check your credentials. (${rateLimit.remainingAttempts} attempt(s) remaining).`,
         wrongPassword: true,
         remainingAttempts: rateLimit.remainingAttempts,
       },

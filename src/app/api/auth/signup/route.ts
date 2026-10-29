@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
 
     if (!email || !password || !full_name) {
       return NextResponse.json(
-        { error: "Full name, email, aur password zaroori hain." },
+        { error: "Full name, email, and password are required." },
         { status: 400 }
       );
     }
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 
     if (rawPassword.length < 8 && cleanPassword.length < 8) {
       return NextResponse.json(
-        { error: "Password kam se kam 8 characters ka hona chahiye." },
+        { error: "Password must be at least 8 characters long." },
         { status: 400 }
       );
     }
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     if (existing.exists) {
       return NextResponse.json(
         {
-          error: "Aapka account is email se pehle se bana hua hai! Kripya 'Sign In' par jaakar login karein.",
+          error: "An account with this email address already exists. Please sign in.",
           alreadyExists: true,
           suggestLogin: true,
           redirectUrl: `/dashboard/${existing.user?.role || "user"}`,
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
       if (msg.toLowerCase().includes("already") || msg.toLowerCase().includes("registered")) {
         return NextResponse.json(
           {
-            error: "Aapka account is email se pehle se bana hua hai! Kripya 'Sign In' par jaakar login karein.",
+            error: "An account with this email address already exists. Please sign in.",
             alreadyExists: true,
             suggestLogin: true,
           },
@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
     const response = NextResponse.json(
       {
         success: true,
-        message: "Naya account safaltapoorvak ban gaya hai! Dashboard me redirect ho rahe hain...",
+        message: "Account created successfully! Redirecting to your dashboard...",
         user: {
           id: userId,
           email: cleanEmail,

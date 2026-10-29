@@ -42,13 +42,13 @@ export default function LoginPage() {
     const activePassword = targetPassword || password;
 
     if (!activeEmail || !activePassword) {
-      setError("Email aur password dono enter karein.");
+      setError("Please provide both email address and password.");
       setPromptAction(null);
       return;
     }
 
     if (mode === "signup" && !fullName) {
-      setError("Naya account banane ke liye apna pura naam (Full Name) enter karein.");
+      setError("Please provide your full name to create an account.");
       setPromptAction(null);
       return;
     }
@@ -75,18 +75,18 @@ export default function LoginPage() {
 
       if (!res.ok) {
         if (data.userNotFound || data.suggestSignup) {
-          setError(data.error || "Is email se koi account nahi mila. Kripya pehle naya account banayein (Sign Up karein).");
+          setError(data.error || "No account found with this email. Please create an account first.");
           setPromptAction("switch_to_signup");
         } else if (data.alreadyExists || data.suggestLogin) {
-          setError(data.error || "Aapka account is email se pehle se bana hua hai! Kripya 'Sign In' karein.");
+          setError(data.error || "An account with this email already exists. Please sign in.");
           setPromptAction("switch_to_login");
         } else {
-          setError(data.error || "Authentication failed. Kripya details check karein.");
+          setError(data.error || "Authentication failed. Please check your credentials.");
           setPromptAction(null);
         }
       } else {
         if (mode === "signup") {
-          setSuccessMsg(data.message || "Account successfully ban gaya! Dashboard me le ja rahe hain...");
+          setSuccessMsg(data.message || "Account created successfully! Redirecting to dashboard...");
           setTimeout(() => {
             window.location.href = data.redirectUrl || "/dashboard/user";
           }, 600);
@@ -95,7 +95,7 @@ export default function LoginPage() {
         }
       }
     } catch {
-      setError("Network ya server connection me issue aaya. Kripya dobara try karein.");
+      setError("Network or server connection failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -198,7 +198,7 @@ export default function LoginPage() {
                         }}
                         className="self-start text-xs font-bold text-celadon-800 bg-celadon-100 hover:bg-celadon-200 px-3 py-1.5 rounded-lg border border-celadon-300 transition shadow-xs flex items-center gap-1.5"
                       >
-                        👉 Yahan Click Karke Naya Account Banayein
+                        👉 Click here to Create an Account (Sign Up)
                       </button>
                     )}
                     {promptAction === "switch_to_login" && (
@@ -211,7 +211,7 @@ export default function LoginPage() {
                         }}
                         className="self-start text-xs font-bold text-celadon-800 bg-celadon-100 hover:bg-celadon-200 px-3 py-1.5 rounded-lg border border-celadon-300 transition shadow-xs flex items-center gap-1.5"
                       >
-                        👉 Yahan Click Karke Sign In Karein
+                        👉 Click here to Sign In
                       </button>
                     )}
                   </div>
