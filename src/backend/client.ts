@@ -3,18 +3,13 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { getBackendConfig } from "./config";
 
-let cachedAdminClient: SupabaseClient | null = null;
-
 /**
  * Privileged Admin Supabase Client
  * Uses SUPABASE_SERVICE_ROLE_KEY to bypass Row Level Security.
  * STRICTLY for server-side / backend use only.
+ * Always enforces the service-role authorization header to prevent session pollution.
  */
 export function getSupabaseAdminClient(): SupabaseClient {
-  if (cachedAdminClient) {
-    return cachedAdminClient;
-  }
-
   const { supabaseUrl, supabaseServiceRoleKey } = getBackendConfig();
 
   if (!supabaseUrl || !supabaseServiceRoleKey) {
@@ -23,14 +18,33 @@ export function getSupabaseAdminClient(): SupabaseClient {
     );
   }
 
-  cachedAdminClient = createClient(supabaseUrl, supabaseServiceRoleKey, {
+  return createClient(supabaseUrl, supabaseServiceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+    global: {
+      headers: {
+        Authorization: `Bearer ${supabaseServiceRoleKey}`,
+        apikey: supabaseServiceRoleKey,
+      },
+    },
+  });
+}
+
+/**
+ * Dedicated, disposable client specifically for verifying user passwords.
+ * Uses anon key so it never interferes with the admin client.
+ */
+export function createAuthClient(): SupabaseClient {
+  const { supabaseUrl, supabaseAnonKey } = getBackendConfig();
+
+  return createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
     },
   });
-
-  return cachedAdminClient;
 }
 
 /**
@@ -58,4 +72,3 @@ export async function getSupabaseServerClient() {
     },
   });
 }
-

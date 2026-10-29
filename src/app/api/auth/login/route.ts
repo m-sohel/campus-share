@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkLoginRateLimit, resetLoginRateLimit } from "@/lib/auth/rate-limiter";
 import { DEMO_USERS } from "@/lib/data/demo-users";
-import { createClientServer } from "@/lib/supabase/server";
-import { getSupabaseAdminClient } from "@/backend/client";
+import { getSupabaseAdminClient, createAuthClient } from "@/backend/client";
 import { logAuditEvent } from "@/backend/services/audit";
+import { checkUserExistence } from "@/lib/auth/user-lookup";
 
 export async function POST(req: NextRequest) {
   try {
@@ -36,15 +36,43 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2. Check Seeded / Demo Users
+    // 2. CHECK IF USER EXISTS IN PLATFORM FIRST
+    const lookup = await checkUserExistence(cleanEmail);
+
+    if (!lookup.exists) {
+      // User has NOT created an account yet!
+      return NextResponse.json(
+        {
+          error: "Is email se koi account nahi mila. Kripya pehle naya account banayein (Sign Up karein).",
+          userNotFound: true,
+          suggestSignup: true,
+        },
+        { status: 404 }
+      );
+    }
+
+    // 3. Authenticate if Demo Persona
     const demoMatch = DEMO_USERS.find(
       (u) => u.email.toLowerCase() === cleanEmail
     );
 
-    if (demoMatch && (rawPassword === demoMatch.password || cleanPassword === demoMatch.password)) {
+    if (demoMatch) {
+      const isPasswordCorrect =
+        rawPassword === demoMatch.password || cleanPassword === demoMatch.password;
+
+      if (!isPasswordCorrect) {
+        return NextResponse.json(
+          {
+            error: `Galat password! Kripya sahi password enter karein. (${rateLimit.remainingAttempts} attempt(s) bache hain).`,
+            wrongPassword: true,
+            remainingAttempts: rateLimit.remainingAttempts,
+          },
+          { status: 401 }
+        );
+      }
+
       resetLoginRateLimit(rateLimitKey);
 
-      // Log login event to tamper-evident audit trail
       try {
         await logAuditEvent({
           actorId: demoMatch.id,
@@ -71,150 +99,105 @@ export async function POST(req: NextRequest) {
         redirectUrl: `/dashboard/${demoMatch.role}`,
       });
 
-      // Set cookie for session persistence
-      response.cookies.set("campus_demo_session", demoMatch.email, {
+      response.cookies.set("campus_demo_session", cleanEmail, {
         path: "/",
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
-        maxAge: 60 * 60 * 24 * 7, // 7 days
+        maxAge: 60 * 60 * 24 * 7,
       });
 
       return response;
     }
 
-    // 3. Fallback: Authenticate via Supabase Auth
+    // 4. Authenticate Registered Supabase User with isolated auth client
+    let authResult: any = null;
+
     try {
-      let authResult: any = null;
+      const authClient = createAuthClient();
+      authResult = await authClient.auth.signInWithPassword({
+        email: cleanEmail,
+        password: rawPassword,
+      });
 
-      // Try via createClientServer first
-      try {
-        const supabase = await createClientServer();
-        authResult = await supabase.auth.signInWithPassword({
+      if (authResult.error && rawPassword !== cleanPassword) {
+        authResult = await authClient.auth.signInWithPassword({
           email: cleanEmail,
-          password: rawPassword,
+          password: cleanPassword,
         });
-
-        if (authResult.error && rawPassword !== cleanPassword) {
-          authResult = await supabase.auth.signInWithPassword({
-            email: cleanEmail,
-            password: cleanPassword,
-          });
-        }
-      } catch (serverErr) {
-        console.warn("createClientServer warning on login:", serverErr);
       }
-
-      // If server client failed or returned error, try direct admin client
-      if (!authResult || authResult.error) {
-        try {
-          const adminClient = getSupabaseAdminClient();
-          const fallback = await adminClient.auth.signInWithPassword({
-            email: cleanEmail,
-            password: rawPassword,
-          });
-
-          if (!fallback.error && fallback.data?.user) {
-            authResult = fallback;
-          } else if (rawPassword !== cleanPassword) {
-            const fallbackTrim = await adminClient.auth.signInWithPassword({
-              email: cleanEmail,
-              password: cleanPassword,
-            });
-            if (!fallbackTrim.error && fallbackTrim.data?.user) {
-              authResult = fallbackTrim;
-            }
-          }
-        } catch (adminErr) {
-          console.warn("Admin client fallback warning on login:", adminErr);
-        }
-      }
-
-      const { data, error } = authResult || {};
-
-      if (!error && data?.user) {
-        resetLoginRateLimit(rateLimitKey);
-
-        let role = "user";
-        let fullName = data.user.user_metadata?.full_name || "Campus Member";
-
-        // Query profiles table safely with admin client to bypass RLS
-        try {
-          const adminClient = getSupabaseAdminClient();
-          const { data: profile } = await adminClient
-            .from("profiles")
-            .select("role, full_name")
-            .eq("id", data.user.id)
-            .maybeSingle();
-
-          if (profile?.role) {
-            role = profile.role;
-            if (profile?.full_name) fullName = profile.full_name;
-          } else {
-            // Auto-create missing profile so user can use the app without DB hiccups
-            await adminClient.from("profiles").upsert(
-              {
-                id: data.user.id,
-                email: cleanEmail,
-                full_name: fullName,
-                role: (data.user.user_metadata?.role as any) || "user",
-                department: data.user.user_metadata?.department || "General Campus",
-                affiliation: data.user.user_metadata?.affiliation || "university",
-                reputation_score: 100.0,
-              },
-              { onConflict: "id" }
-            );
-          }
-        } catch (profErr) {
-          console.warn("Profile fetch warning on login:", profErr);
-        }
-
-        try {
-          await logAuditEvent({
-            actorId: data.user.id,
-            actorRole: role,
-            action: "USER_LOGGED_IN",
-            resourceType: "session",
-            resourceId: data.user.id,
-            ipAddress: clientIp,
-            userAgent,
-            reason: `User authenticated via Supabase credentials as ${role}.`,
-          });
-        } catch (e) {
-          console.warn("Audit logging warning on Supabase login:", e);
-        }
-
-        const response = NextResponse.json({
-          success: true,
-          user: {
-            ...data.user,
-            full_name: fullName,
-            role,
-          },
-          redirectUrl: `/dashboard/${role}`,
-        });
-
-        // Set session cookie for seamless server-side authorization in role-guard
-        response.cookies.set("campus_demo_session", cleanEmail, {
-          path: "/",
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "lax",
-          maxAge: 60 * 60 * 24 * 7, // 7 days
-        });
-
-        return response;
-      } else if (error) {
-        console.warn("Supabase signIn attempt failed:", error.message);
-      }
-    } catch (supabaseErr: any) {
-      console.warn("Supabase connection exception:", supabaseErr?.message || supabaseErr);
+    } catch (authErr) {
+      console.warn("Auth verification exception:", authErr);
     }
 
-    // Invalid credentials
+    const { data, error } = authResult || {};
+
+    if (!error && data?.user) {
+      resetLoginRateLimit(rateLimitKey);
+
+      let role = lookup.user?.role || (data.user.user_metadata?.role as string) || "user";
+      let fullName = lookup.user?.full_name || data.user.user_metadata?.full_name || "Campus Member";
+
+      // Ensure profile row exists in public.profiles table
+      try {
+        const adminClient = getSupabaseAdminClient();
+        await adminClient.from("profiles").upsert(
+          {
+            id: data.user.id,
+            email: cleanEmail,
+            full_name: fullName,
+            role: role as any,
+            department: lookup.user?.department || "General Campus",
+            affiliation: lookup.user?.affiliation || "university",
+            reputation_score: 100.0,
+          },
+          { onConflict: "id" }
+        );
+      } catch (profErr) {
+        console.warn("Profile sync warning:", profErr);
+      }
+
+      try {
+        await logAuditEvent({
+          actorId: data.user.id,
+          actorRole: role,
+          action: "USER_LOGGED_IN",
+          resourceType: "session",
+          resourceId: data.user.id,
+          ipAddress: clientIp,
+          userAgent,
+          reason: `User authenticated via Supabase credentials as ${role}.`,
+        });
+      } catch (e) {
+        console.warn("Audit logging warning on Supabase login:", e);
+      }
+
+      const response = NextResponse.json({
+        success: true,
+        user: {
+          ...data.user,
+          full_name: fullName,
+          role,
+        },
+        redirectUrl: `/dashboard/${role}`,
+      });
+
+      response.cookies.set("campus_demo_session", cleanEmail, {
+        path: "/",
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 7,
+      });
+
+      return response;
+    }
+
+    // Account exists, but password was incorrect
     return NextResponse.json(
       {
-        error: `Invalid email or password. (${rateLimit.remainingAttempts} attempt(s) remaining before temporary lockout).`,
+        error: `Galat password! Kripya sahi password enter karein. (${rateLimit.remainingAttempts} attempt(s) bache hain).`,
+        wrongPassword: true,
         remainingAttempts: rateLimit.remainingAttempts,
       },
       { status: 401 }

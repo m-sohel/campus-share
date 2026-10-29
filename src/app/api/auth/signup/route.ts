@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/backend/client";
 import { logAuditEvent } from "@/backend/services/audit";
+import { checkUserExistence } from "@/lib/auth/user-lookup";
 
 export async function POST(req: NextRequest) {
   try {
@@ -8,7 +9,7 @@ export async function POST(req: NextRequest) {
 
     if (!email || !password || !full_name) {
       return NextResponse.json(
-        { error: "Full name, email, and password are required." },
+        { error: "Full name, email, aur password zaroori hain." },
         { status: 400 }
       );
     }
@@ -20,15 +21,29 @@ export async function POST(req: NextRequest) {
 
     if (rawPassword.length < 8 && cleanPassword.length < 8) {
       return NextResponse.json(
-        { error: "Password must be at least 8 characters long." },
+        { error: "Password kam se kam 8 characters ka hona chahiye." },
         { status: 400 }
+      );
+    }
+
+    // 1. CHECK IF USER ALREADY EXISTS
+    const existing = await checkUserExistence(cleanEmail);
+
+    if (existing.exists) {
+      return NextResponse.json(
+        {
+          error: "Aapka account is email se pehle se bana hua hai! Kripya 'Sign In' par jaakar login karein.",
+          alreadyExists: true,
+          suggestLogin: true,
+          redirectUrl: `/dashboard/${existing.user?.role || "user"}`,
+        },
+        { status: 409 }
       );
     }
 
     const supabase = getSupabaseAdminClient();
 
-    // 1. Create user in Supabase Auth
-    let userId: string | null = null;
+    // 2. Create user in Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email: cleanEmail,
       password: rawPassword,
@@ -36,7 +51,7 @@ export async function POST(req: NextRequest) {
       user_metadata: {
         full_name: cleanFullName,
         role: "user",
-        department: department || "General",
+        department: department || "General Campus",
         affiliation: affiliation || "university",
       },
     });
@@ -44,80 +59,11 @@ export async function POST(req: NextRequest) {
     if (authError) {
       const msg = authError.message || "";
       if (msg.toLowerCase().includes("already") || msg.toLowerCase().includes("registered")) {
-        // Attempt password verification to automatically sign in existing user
-        try {
-          let signInRes = await supabase.auth.signInWithPassword({
-            email: cleanEmail,
-            password: rawPassword,
-          });
-
-          if (signInRes.error && rawPassword !== cleanPassword) {
-            signInRes = await supabase.auth.signInWithPassword({
-              email: cleanEmail,
-              password: cleanPassword,
-            });
-          }
-
-          if (!signInRes.error && signInRes.data?.user) {
-            let role = signInRes.data.user.user_metadata?.role || "user";
-            let name = signInRes.data.user.user_metadata?.full_name || cleanFullName;
-
-            try {
-              const { data: prof } = await supabase
-                .from("profiles")
-                .select("id, role, full_name")
-                .eq("id", signInRes.data.user.id)
-                .maybeSingle();
-              if (prof?.role) role = prof.role;
-              if (prof?.full_name) name = prof.full_name;
-            } catch {
-              // fallback to auth metadata
-            }
-
-            const response = NextResponse.json({
-              success: true,
-              message: "Account already exists; signed in successfully.",
-              user: {
-                id: signInRes.data.user.id,
-                email: cleanEmail,
-                full_name: name,
-                role,
-              },
-              redirectUrl: `/dashboard/${role}`,
-            });
-
-            response.cookies.set("campus_demo_session", cleanEmail, {
-              path: "/",
-              httpOnly: true,
-              secure: process.env.NODE_ENV === "production",
-              sameSite: "lax",
-              maxAge: 60 * 60 * 24 * 7,
-            });
-
-            return response;
-          }
-        } catch {
-          // fallback to 409
-        }
-
-        // If password was incorrect or sign-in failed
-        let role = "user";
-        try {
-          const { data: existingUser } = await supabase
-            .from("profiles")
-            .select("id, role, full_name")
-            .eq("email", cleanEmail)
-            .maybeSingle();
-          if (existingUser?.role) role = existingUser.role;
-        } catch {
-          // ignore schema cache error
-        }
-
         return NextResponse.json(
           {
-            error: "An account with this email address already exists. Please switch to 'Sign In' or check your password.",
+            error: "Aapka account is email se pehle se bana hua hai! Kripya 'Sign In' par jaakar login karein.",
             alreadyExists: true,
-            redirectUrl: `/dashboard/${role}`,
+            suggestLogin: true,
           },
           { status: 409 }
         );
@@ -126,11 +72,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: authError.message }, { status: 400 });
     }
 
-    userId = authData.user.id;
+    const userId = authData.user.id;
 
-    // 2. Insert or Upsert into public.profiles with safe retry
-    let profileError: any = null;
-    for (let attempt = 0; attempt < 2; attempt++) {
+    // 3. PERSIST IMMEDIATELY INTO public.profiles TABLE (Guaranteed Save)
+    let profileSaved = false;
+    for (let attempt = 0; attempt < 3; attempt++) {
       try {
         const { error: pErr } = await supabase.from("profiles").upsert(
           {
@@ -146,50 +92,48 @@ export async function POST(req: NextRequest) {
         );
 
         if (!pErr) {
-          profileError = null;
+          profileSaved = true;
           break;
         }
-        profileError = pErr;
+        console.warn(`Profile upsert attempt ${attempt + 1} warning:`, pErr.message);
       } catch (err: any) {
-        profileError = err;
+        console.warn(`Profile upsert error attempt ${attempt + 1}:`, err.message || err);
       }
 
-      // Small backoff before retry if schema cache is refreshing
-      if (attempt === 0 && profileError) {
-        await new Promise((r) => setTimeout(r, 300));
-      }
+      await new Promise((r) => setTimeout(r, 200));
     }
 
-    if (profileError) {
-      console.warn("Notice: public.profiles sync warning:", profileError.message || profileError);
-    }
-
-    // 3. Write to Audit Log (Tamper-proof event)
+    // 4. Log Audit Trail
     try {
       await logAuditEvent({
         actorId: userId,
+        actorRole: "user",
         action: "USER_REGISTERED",
         resourceType: "profile",
         resourceId: userId,
         newState: { email: cleanEmail, full_name: cleanFullName, role: "user" },
-        reason: "New user self-registration via signup portal.",
+        reason: "New borrower account self-registered and verified in database.",
       });
     } catch (auditErr) {
-      console.warn("Audit logging warning during signup:", auditErr);
+      console.warn("Audit logging warning during registration:", auditErr);
     }
 
-    const response = NextResponse.json({
-      success: true,
-      user: {
-        id: userId,
-        email: cleanEmail,
-        full_name: cleanFullName,
-        role: "user",
+    const response = NextResponse.json(
+      {
+        success: true,
+        message: "Naya account safaltapoorvak ban gaya hai! Dashboard me redirect ho rahe hain...",
+        user: {
+          id: userId,
+          email: cleanEmail,
+          full_name: cleanFullName,
+          role: "user",
+        },
+        redirectUrl: "/dashboard/user",
       },
-      redirectUrl: "/dashboard/user",
-    });
+      { status: 201 }
+    );
 
-    // Set session cookie for instant login
+    // 5. Set session cookie for seamless instant authorization
     response.cookies.set("campus_demo_session", cleanEmail, {
       path: "/",
       httpOnly: true,

@@ -21,6 +21,7 @@ import {
   Building,
   Eye,
   EyeOff,
+  CheckCircle2,
 } from "lucide-react";
 
 export default function LoginPage() {
@@ -33,23 +34,29 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [promptAction, setPromptAction] = useState<"switch_to_signup" | "switch_to_login" | null>(null);
 
   const handleSubmit = async (targetEmail?: string, targetPassword?: string) => {
     const activeEmail = (targetEmail || email).trim();
     const activePassword = targetPassword || password;
 
     if (!activeEmail || !activePassword) {
-      setError("Please provide both email and password.");
+      setError("Email aur password dono enter karein.");
+      setPromptAction(null);
       return;
     }
 
     if (mode === "signup" && !fullName) {
-      setError("Please provide your full name to create an account.");
+      setError("Naya account banane ke liye apna pura naam (Full Name) enter karein.");
+      setPromptAction(null);
       return;
     }
 
     setLoading(true);
     setError(null);
+    setSuccessMsg(null);
+    setPromptAction(null);
 
     const endpoint = mode === "signup" ? "/api/auth/signup" : "/api/auth/login";
     const payload =
@@ -67,17 +74,28 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        if (data.alreadyExists) {
-          setMode("login");
-          setError(data.error || "Account already registered. Please enter your password to sign in.");
+        if (data.userNotFound || data.suggestSignup) {
+          setError(data.error || "Is email se koi account nahi mila. Kripya pehle naya account banayein (Sign Up karein).");
+          setPromptAction("switch_to_signup");
+        } else if (data.alreadyExists || data.suggestLogin) {
+          setError(data.error || "Aapka account is email se pehle se bana hua hai! Kripya 'Sign In' karein.");
+          setPromptAction("switch_to_login");
         } else {
-          setError(data.error || "Authentication failed.");
+          setError(data.error || "Authentication failed. Kripya details check karein.");
+          setPromptAction(null);
         }
       } else {
-        window.location.href = data.redirectUrl || "/dashboard";
+        if (mode === "signup") {
+          setSuccessMsg(data.message || "Account successfully ban gaya! Dashboard me le ja rahe hain...");
+          setTimeout(() => {
+            window.location.href = data.redirectUrl || "/dashboard/user";
+          }, 600);
+        } else {
+          window.location.href = data.redirectUrl || "/dashboard";
+        }
       }
     } catch {
-      setError("Network or server connection failed. Please retry.");
+      setError("Network ya server connection me issue aaya. Kripya dobara try karein.");
     } finally {
       setLoading(false);
     }
@@ -116,6 +134,8 @@ export default function LoginPage() {
                 onClick={() => {
                   setMode("login");
                   setError(null);
+                  setSuccessMsg(null);
+                  setPromptAction(null);
                 }}
                 className={`flex-1 py-2 text-xs font-bold rounded-lg transition ${
                   mode === "login"
@@ -130,6 +150,8 @@ export default function LoginPage() {
                 onClick={() => {
                   setMode("signup");
                   setError(null);
+                  setSuccessMsg(null);
+                  setPromptAction(null);
                 }}
                 className={`flex-1 py-2 text-xs font-bold rounded-lg transition ${
                   mode === "signup"
@@ -161,9 +183,44 @@ export default function LoginPage() {
                 className="space-y-4"
               >
                 {error && (
-                  <div className="rounded-xl bg-rose-50 border border-rose-200 p-3 text-rose-900 text-sm flex items-start gap-2.5">
-                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                    <span>{error}</span>
+                  <div className="rounded-xl bg-amber-50/90 border border-amber-200 p-3.5 text-amber-950 text-sm flex flex-col gap-2.5 shadow-xs">
+                    <div className="flex items-start gap-2.5">
+                      <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                      <span className="font-medium leading-snug">{error}</span>
+                    </div>
+                    {promptAction === "switch_to_signup" && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMode("signup");
+                          setError(null);
+                          setPromptAction(null);
+                        }}
+                        className="self-start text-xs font-bold text-celadon-800 bg-celadon-100 hover:bg-celadon-200 px-3 py-1.5 rounded-lg border border-celadon-300 transition shadow-xs flex items-center gap-1.5"
+                      >
+                        👉 Yahan Click Karke Naya Account Banayein
+                      </button>
+                    )}
+                    {promptAction === "switch_to_login" && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMode("login");
+                          setError(null);
+                          setPromptAction(null);
+                        }}
+                        className="self-start text-xs font-bold text-celadon-800 bg-celadon-100 hover:bg-celadon-200 px-3 py-1.5 rounded-lg border border-celadon-300 transition shadow-xs flex items-center gap-1.5"
+                      >
+                        👉 Yahan Click Karke Sign In Karein
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {successMsg && (
+                  <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3.5 text-emerald-950 text-sm flex items-start gap-2.5 shadow-xs">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <span className="font-semibold">{successMsg}</span>
                   </div>
                 )}
 
