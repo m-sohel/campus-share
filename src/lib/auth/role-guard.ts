@@ -14,7 +14,13 @@ export async function getCurrentUser(): Promise<Profile | null> {
 
   // 1. Check for active session cookie (demo users or registered platform users)
   if (sessionCookie) {
-    const cleanEmail = sessionCookie.trim().toLowerCase();
+    let cleanEmail = sessionCookie.trim().toLowerCase();
+    try {
+      cleanEmail = decodeURIComponent(cleanEmail);
+    } catch {
+      // fallback to raw value
+    }
+
     const demoUser = DEMO_USERS.find((u) => u.email.toLowerCase() === cleanEmail);
     if (demoUser) {
       return {

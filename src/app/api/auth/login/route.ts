@@ -85,25 +85,54 @@ export async function POST(req: NextRequest) {
 
     // 3. Fallback: Authenticate via Supabase Auth
     try {
-      const supabase = await createClientServer();
-      
-      // Try with raw password first
-      let authResult = await supabase.auth.signInWithPassword({
-        email: cleanEmail,
-        password: rawPassword,
-      });
+      let authResult: any = null;
 
-      // If failed and password has spaces, try trimmed password
-      if (authResult.error && rawPassword !== cleanPassword) {
+      // Try via createClientServer first
+      try {
+        const supabase = await createClientServer();
         authResult = await supabase.auth.signInWithPassword({
           email: cleanEmail,
-          password: cleanPassword,
+          password: rawPassword,
         });
+
+        if (authResult.error && rawPassword !== cleanPassword) {
+          authResult = await supabase.auth.signInWithPassword({
+            email: cleanEmail,
+            password: cleanPassword,
+          });
+        }
+      } catch (serverErr) {
+        console.warn("createClientServer warning on login:", serverErr);
       }
 
-      const { data, error } = authResult;
+      // If server client failed or returned error, try direct admin client
+      if (!authResult || authResult.error) {
+        try {
+          const adminClient = getSupabaseAdminClient();
+          const fallback = await adminClient.auth.signInWithPassword({
+            email: cleanEmail,
+            password: rawPassword,
+          });
 
-      if (!error && data.user) {
+          if (!fallback.error && fallback.data?.user) {
+            authResult = fallback;
+          } else if (rawPassword !== cleanPassword) {
+            const fallbackTrim = await adminClient.auth.signInWithPassword({
+              email: cleanEmail,
+              password: cleanPassword,
+            });
+            if (!fallbackTrim.error && fallbackTrim.data?.user) {
+              authResult = fallbackTrim;
+            }
+          }
+        } catch (adminErr) {
+          console.warn("Admin client fallback warning on login:", adminErr);
+        }
+      }
+
+      const { data, error } = authResult || {};
+
+      if (!error && data?.user) {
         resetLoginRateLimit(rateLimitKey);
 
         let role = "user";
@@ -118,8 +147,24 @@ export async function POST(req: NextRequest) {
             .eq("id", data.user.id)
             .maybeSingle();
 
-          if (profile?.role) role = profile.role;
-          if (profile?.full_name) fullName = profile.full_name;
+          if (profile?.role) {
+            role = profile.role;
+            if (profile?.full_name) fullName = profile.full_name;
+          } else {
+            // Auto-create missing profile so user can use the app without DB hiccups
+            await adminClient.from("profiles").upsert(
+              {
+                id: data.user.id,
+                email: cleanEmail,
+                full_name: fullName,
+                role: (data.user.user_metadata?.role as any) || "user",
+                department: data.user.user_metadata?.department || "General Campus",
+                affiliation: data.user.user_metadata?.affiliation || "university",
+                reputation_score: 100.0,
+              },
+              { onConflict: "id" }
+            );
+          }
         } catch (profErr) {
           console.warn("Profile fetch warning on login:", profErr);
         }

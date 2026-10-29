@@ -13,7 +13,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (password.length < 8) {
+    const cleanEmail = String(email).trim().toLowerCase();
+    const rawPassword = String(password);
+    const cleanPassword = rawPassword.trim();
+    const cleanFullName = String(full_name).trim();
+
+    if (rawPassword.length < 8 && cleanPassword.length < 8) {
       return NextResponse.json(
         { error: "Password must be at least 8 characters long." },
         { status: 400 }
@@ -25,11 +30,11 @@ export async function POST(req: NextRequest) {
     // 1. Create user in Supabase Auth
     let userId: string | null = null;
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-      email,
-      password,
+      email: cleanEmail,
+      password: rawPassword,
       email_confirm: true,
       user_metadata: {
-        full_name,
+        full_name: cleanFullName,
         role: "user",
         department: department || "General",
         affiliation: affiliation || "university",
@@ -41,20 +46,27 @@ export async function POST(req: NextRequest) {
       if (msg.toLowerCase().includes("already") || msg.toLowerCase().includes("registered")) {
         // Attempt password verification to automatically sign in existing user
         try {
-          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-            email,
-            password,
+          let signInRes = await supabase.auth.signInWithPassword({
+            email: cleanEmail,
+            password: rawPassword,
           });
 
-          if (!signInError && signInData?.user) {
-            let role = signInData.user.user_metadata?.role || "user";
-            let name = signInData.user.user_metadata?.full_name || full_name;
+          if (signInRes.error && rawPassword !== cleanPassword) {
+            signInRes = await supabase.auth.signInWithPassword({
+              email: cleanEmail,
+              password: cleanPassword,
+            });
+          }
+
+          if (!signInRes.error && signInRes.data?.user) {
+            let role = signInRes.data.user.user_metadata?.role || "user";
+            let name = signInRes.data.user.user_metadata?.full_name || cleanFullName;
 
             try {
               const { data: prof } = await supabase
                 .from("profiles")
                 .select("id, role, full_name")
-                .eq("id", signInData.user.id)
+                .eq("id", signInRes.data.user.id)
                 .maybeSingle();
               if (prof?.role) role = prof.role;
               if (prof?.full_name) name = prof.full_name;
@@ -66,15 +78,15 @@ export async function POST(req: NextRequest) {
               success: true,
               message: "Account already exists; signed in successfully.",
               user: {
-                id: signInData.user.id,
-                email,
+                id: signInRes.data.user.id,
+                email: cleanEmail,
                 full_name: name,
                 role,
               },
               redirectUrl: `/dashboard/${role}`,
             });
 
-            response.cookies.set("campus_demo_session", email, {
+            response.cookies.set("campus_demo_session", cleanEmail, {
               path: "/",
               httpOnly: true,
               secure: process.env.NODE_ENV === "production",
@@ -94,7 +106,7 @@ export async function POST(req: NextRequest) {
           const { data: existingUser } = await supabase
             .from("profiles")
             .select("id, role, full_name")
-            .eq("email", email.toLowerCase().trim())
+            .eq("email", cleanEmail)
             .maybeSingle();
           if (existingUser?.role) role = existingUser.role;
         } catch {
@@ -123,8 +135,8 @@ export async function POST(req: NextRequest) {
         const { error: pErr } = await supabase.from("profiles").upsert(
           {
             id: userId,
-            email: email.toLowerCase().trim(),
-            full_name,
+            email: cleanEmail,
+            full_name: cleanFullName,
             role: "user",
             department: department || "General Campus",
             affiliation: affiliation || "university",
@@ -150,7 +162,6 @@ export async function POST(req: NextRequest) {
 
     if (profileError) {
       console.warn("Notice: public.profiles sync warning:", profileError.message || profileError);
-      // Even if profiles table is slow to reflect schema cache, user is created in auth
     }
 
     // 3. Write to Audit Log (Tamper-proof event)
@@ -160,7 +171,7 @@ export async function POST(req: NextRequest) {
         action: "USER_REGISTERED",
         resourceType: "profile",
         resourceId: userId,
-        newState: { email, full_name, role: "user" },
+        newState: { email: cleanEmail, full_name: cleanFullName, role: "user" },
         reason: "New user self-registration via signup portal.",
       });
     } catch (auditErr) {
@@ -171,15 +182,15 @@ export async function POST(req: NextRequest) {
       success: true,
       user: {
         id: userId,
-        email,
-        full_name,
+        email: cleanEmail,
+        full_name: cleanFullName,
         role: "user",
       },
       redirectUrl: "/dashboard/user",
     });
 
     // Set session cookie for instant login
-    response.cookies.set("campus_demo_session", email, {
+    response.cookies.set("campus_demo_session", cleanEmail, {
       path: "/",
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",

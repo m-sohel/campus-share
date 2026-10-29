@@ -74,8 +74,7 @@ export default function LoginPage() {
           setError(data.error || "Authentication failed.");
         }
       } else {
-        router.push(data.redirectUrl || "/dashboard");
-        router.refresh();
+        window.location.href = data.redirectUrl || "/dashboard";
       }
     } catch {
       setError("Network or server connection failed. Please retry.");
