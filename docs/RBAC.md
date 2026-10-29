@@ -276,3 +276,4 @@ await logAuditEvent({
 | `user.revoked@campusshare.edu` | `Password123!` | Lucas Wright | **user** | Drone Racing Club (`university`) |
 
 To evaluate any persona instantaneously, use the **1-Click Persona Switcher** on the [Login Page](/login) or the [Judge Evaluation Console](/judge).
+
